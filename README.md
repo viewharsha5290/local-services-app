@@ -1,4 +1,4 @@
-# Local — Neighborhood Services Directory
+# The Local Services — Neighborhood Services Directory
 
 A mobile-first (responsive) web app for finding local service providers (mechanics, handymen, attorneys, auditors, clergy, electricians) through neighbor reviews and recommendations, built from a Claude Design canvas spec (`Local Services App.dc.html`).
 

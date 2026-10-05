@@ -16,7 +16,7 @@ export function DesktopNav() {
   return (
     <nav className="desktopnav">
       <Link href="/search" className="desktopnav-brand">
-        Local
+        The Local Services
       </Link>
       <div className="desktopnav-links">
         <Link href="/search" className={`desktopnav-link ${isSearch ? "active" : ""}`}>

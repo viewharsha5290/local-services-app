@@ -17,7 +17,7 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "Local — find who your neighbors trust",
+  title: "The Local Services — find who your neighbors trust",
   description: "A local services directory for handymen, mechanics, attorneys and more, built on neighbor recommendations.",
 };
 
