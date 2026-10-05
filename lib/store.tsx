@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
-import { AuthState, ClaimStatus, ContactEvent, ContactMethod, GoogleReview, PendingAction, PendingClaim, Provider, Review } from "./types";
+import { AuthState, ClaimStatus, ContactEvent, ContactMethod, GoogleReview, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
@@ -110,6 +110,9 @@ interface AppContextValue {
   /** Admin only — enforced by the database, not by this client. */
   fetchPendingClaims: () => Promise<{ claims: PendingClaim[]; error?: string }>;
   reviewClaim: (claimId: string, approve: boolean) => Promise<{ error?: string }>;
+  /** Listings the signed-in user manages, with their contact counts. Empty for everyone else. */
+  myListings: ListingStats[];
+  refreshMyListings: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -222,6 +225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [contactEvents, setContactEvents] = useState<ContactEvent[]>([]);
   const [trustStats, setTrustStats] = useState<TrustStats>(defaultTrustStats);
   const [myClaims, setMyClaims] = useState<Record<string, ClaimStatus>>({});
+  const [myListings, setMyListings] = useState<ListingStats[]>([]);
 
   const fetchProviders = useCallback(async (cityFilter?: string | null) => {
     let query = supabase.from("providers").select("*, reviews(*)").order("created_at", { ascending: true });
@@ -257,11 +261,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMyClaims(Object.fromEntries((data ?? []).map((r) => [r.provider_id, r.status as ClaimStatus])));
   }, []);
 
+  const refreshMyListings = useCallback(async () => {
+    const { data } = await supabase.rpc("my_listing_stats");
+    setMyListings(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ((data ?? []) as any[]).map((r) => ({
+        providerId: r.provider_id,
+        providerName: r.provider_name,
+        last30Days: Number(r.total_30d),
+        calls30Days: Number(r.calls_30d),
+        whatsapp30Days: Number(r.whatsapp_30d),
+        sms30Days: Number(r.sms_30d),
+        allTime: Number(r.total_all),
+        countingSince: r.counting_since ?? undefined,
+      }))
+    );
+  }, []);
+
   const loadSignedInExtras = useCallback(
     async (userId: string) => {
-      await Promise.all([fetchSaved(userId), fetchContactEvents(userId), fetchTrustStats(userId), fetchMyClaims(userId)]);
+      await Promise.all([fetchSaved(userId), fetchContactEvents(userId), fetchTrustStats(userId), fetchMyClaims(userId), refreshMyListings()]);
     },
-    [fetchSaved, fetchContactEvents, fetchTrustStats, fetchMyClaims]
+    [fetchSaved, fetchContactEvents, fetchTrustStats, fetchMyClaims, refreshMyListings]
   );
 
   // The one place a signed-in session is set up, whichever way it arrived (stored session,
@@ -320,6 +341,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setContactEvents([]);
         setTrustStats(defaultTrustStats);
         setMyClaims({});
+        setMyListings([]);
       } else if (event === "SIGNED_IN" && session?.user) {
         // Deferred: supabase-js holds its auth lock while this callback runs, so making
         // Supabase calls from inside it directly can deadlock.
@@ -525,6 +547,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const logContact = useCallback(
     async (providerId: string, providerName: string, method: ContactMethod) => {
+      // Anonymous per-listing tally (guests included) that the listing's owner can see. Separate
+      // from the private follow-up log below, which exists to nudge this user for a review.
+      send(supabase.rpc("log_provider_contact", { p_provider_id: providerId, p_method: method }));
       const now = Date.now();
       const followUpAt = now + FOLLOW_UP_DELAY_MS;
       if (auth.status === "signedIn" && auth.id) {
@@ -622,6 +647,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     submitClaim,
     fetchPendingClaims,
     reviewClaim,
+    myListings,
+    refreshMyListings,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

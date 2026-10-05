@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { BadgeCheck, Bookmark, Check, ExternalLink, Phone, Share2, ShieldCheck } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { GoogleRating, Stars } from "@/components/Stars";
-import { ClaimStatus, GoogleReview, Provider } from "@/lib/types";
+import { ClaimStatus, GoogleReview, ListingStats, Provider } from "@/lib/types";
 import { useApp } from "@/lib/store";
 import { useRequireAuth } from "@/lib/useActions";
 import { useSheet } from "@/components/SheetProvider";
@@ -17,12 +17,18 @@ import { formatLocationMeta } from "@/lib/format";
 export default function ProviderDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { auth, getProvider, isSaved, logContact, myClaims } = useApp();
+  const { auth, getProvider, isSaved, logContact, myClaims, myListings, refreshMyListings } = useApp();
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
   const [shared, setShared] = useState(false);
 
   const provider = getProvider(params.id);
+  const isOwner = Boolean(auth.id) && provider?.ownerId === auth.id;
+
+  // Owners come here to see how the listing is doing, so fetch fresh counts on arrival.
+  useEffect(() => {
+    if (isOwner) refreshMyListings();
+  }, [isOwner, refreshMyListings]);
 
   if (!provider) {
     return (
@@ -131,6 +137,8 @@ export default function ProviderDetailPage() {
           </button>
         </div>
 
+        {isOwner && <OwnerStatsCard stats={myListings.find((l) => l.providerId === provider.id)} />}
+
         <div className="hr" />
 
         <div className="section-label" style={{ margin: "14px 0 4px" }}>
@@ -169,12 +177,47 @@ export default function ProviderDetailPage() {
 
         <ClaimRow
           provider={provider}
-          isOwner={Boolean(auth.id) && provider.ownerId === auth.id}
+          isOwner={isOwner}
           claimStatus={myClaims[provider.id]}
           onClaim={() => requireAuth({ type: "claim", providerId: provider.id })}
         />
       </div>
     </>
+  );
+}
+
+/** Shown only to the business that manages the listing: what the site has sent them. */
+function OwnerStatsCard({ stats }: { stats?: ListingStats }) {
+  const since = stats?.countingSince
+    ? new Date(stats.countingSince).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : null;
+  return (
+    <div className="card blueprint" style={{ marginBottom: 18 }}>
+      <i className="corner tl" /><i className="corner tr" /><i className="corner bl" /><i className="corner br" />
+      <div className="section-label" style={{ marginBottom: 2 }}>Your listing · only you see this</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+        <span style={{ fontFamily: "var(--font-heading)", fontSize: 30, lineHeight: 1 }}>{stats?.last30Days ?? 0}</span>
+        <span style={{ fontSize: 13 }}>{(stats?.last30Days ?? 0) === 1 ? "contact" : "contacts"} in the last 30 days</span>
+      </div>
+      <div style={{ display: "flex", textAlign: "center", marginTop: 10, borderTop: "1px solid var(--color-divider)", paddingTop: 10 }}>
+        <OwnerStat value={stats?.calls30Days ?? 0} label="Calls" />
+        <OwnerStat value={stats?.whatsapp30Days ?? 0} label="WhatsApp" border />
+        <OwnerStat value={stats?.sms30Days ?? 0} label="SMS" border />
+        <OwnerStat value={stats?.allTime ?? 0} label="All time" border />
+      </div>
+      <div style={{ fontSize: 11.5, color: "var(--color-neutral-600)", marginTop: 10 }}>
+        {`Counts taps on Call, WhatsApp and SMS from this page${since ? `, since ${since}` : ""}. A tap isn't always a completed call.`}
+      </div>
+    </div>
+  );
+}
+
+function OwnerStat({ value, label, border }: { value: number; label: string; border?: boolean }) {
+  return (
+    <div style={{ flex: 1, borderLeft: border ? "1px solid var(--color-divider)" : undefined }}>
+      <div style={{ fontFamily: "var(--font-heading)", fontSize: 18 }}>{value}</div>
+      <div style={{ fontSize: 11, color: "var(--color-neutral-600)" }}>{label}</div>
+    </div>
   );
 }
 

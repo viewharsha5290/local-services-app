@@ -243,6 +243,10 @@ The rules live in the database (`supabase/migration_006_provider_claims.sql`): c
 
 Owning a listing doesn't unlock editing yet — that arrives with provider references and photos. In-app chat stays off (`CHAT_ENABLED` in `lib/data.ts`) because it is still a local mock.
 
+### Contact counts for listing owners
+
+Every tap on Call, WhatsApp or SMS is tallied per listing in `provider_contact_log` (anonymous — guests included — via the `log_provider_contact()` function; `supabase/migration_007_contact_counts.sql`). The business that manages a listing sees the last-30-day and all-time counts in a "Your listing" card on its provider page and on its Profile; `my_listing_stats()` returns rows only for listings the caller owns, and the raw log is not readable by anyone. These are taps, not confirmed calls, and counting starts when the migration is applied. There is no rate limiting, so counts could be inflated by repeated taps — fine for showing owners their traffic, not yet a basis for billing.
+
 ## Known Limitations
 
 - Apple/Google sign-in buttons are visual stubs (disabled) — no OAuth provider wired up yet, only email OTP.

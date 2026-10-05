@@ -6,7 +6,7 @@ import { TopBar } from "@/components/TopBar";
 import { useApp } from "@/lib/store";
 
 export default function ProfilePage() {
-  const { auth, locationLabel, savedIds, trustStats, signOut } = useApp();
+  const { auth, locationLabel, savedIds, trustStats, signOut, myListings } = useApp();
   const router = useRouter();
   const initials =
     auth.name
@@ -74,6 +74,12 @@ export default function ProfilePage() {
           <div className="list-row" style={{ cursor: "default" }}>
             My reviews<span className="v">{trustStats.reviews}</span>
           </div>
+          {myListings.map((l) => (
+            <button key={l.providerId} type="button" className="list-row" onClick={() => router.push(`/provider/${l.providerId}`)}>
+              {`Your listing: ${l.providerName}`}
+              <span className="v">{`${l.last30Days} ${l.last30Days === 1 ? "contact" : "contacts"} this month`}</span>
+            </button>
+          ))}
           {auth.isAdmin && (
             <button type="button" className="list-row" onClick={() => router.push("/admin/claims")}>
               Review listing claims<span className="v">Admin</span>

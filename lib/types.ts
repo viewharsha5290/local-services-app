@@ -92,6 +92,20 @@ export interface PendingClaim {
   createdAt: string;
 }
 
+/** Contact counts for one listing the signed-in user manages (see my_listing_stats()). These are
+ * taps on Call / WhatsApp / SMS, not confirmed conversations. */
+export interface ListingStats {
+  providerId: string;
+  providerName: string;
+  last30Days: number;
+  calls30Days: number;
+  whatsapp30Days: number;
+  sms30Days: number;
+  allTime: number;
+  /** When the first contact was counted; undefined until there is one. */
+  countingSince?: string;
+}
+
 export interface AuthState {
   status: "guest" | "signedIn";
   id?: string;
