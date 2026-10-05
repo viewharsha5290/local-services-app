@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
-import { AuthState, ContactEvent, ContactMethod, GoogleReview, PendingAction, Provider, Review } from "./types";
+import { AuthState, ClaimStatus, ContactEvent, ContactMethod, GoogleReview, PendingAction, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
@@ -22,6 +22,13 @@ interface ReviewInput {
   rating: number;
   tags: string[];
   text: string;
+}
+
+interface ClaimInput {
+  providerId: string;
+  roleTitle: string;
+  contactPhone: string;
+  note: string;
 }
 
 interface Coords {
@@ -97,6 +104,12 @@ interface AppContextValue {
   getProvider: (id: string) => Provider | undefined;
   /** Loaded per provider page rather than with the list — ~5 per provider adds up fast. */
   fetchGoogleReviews: (providerId: string) => Promise<GoogleReview[]>;
+  /** The signed-in user's own claims, keyed by provider id. */
+  myClaims: Record<string, ClaimStatus>;
+  submitClaim: (input: ClaimInput) => Promise<{ error?: string }>;
+  /** Admin only — enforced by the database, not by this client. */
+  fetchPendingClaims: () => Promise<{ claims: PendingClaim[]; error?: string }>;
+  reviewClaim: (claimId: string, approve: boolean) => Promise<{ error?: string }>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -152,6 +165,7 @@ function mapProviderRow(row: any): Provider {
     googleRating: row.google_rating != null ? Number(row.google_rating) : undefined,
     googleRatingCount: row.google_rating_count ?? undefined,
     googleMapsUri: row.google_maps_uri ?? undefined,
+    ownerId: row.owner_id ?? undefined,
   };
 }
 
@@ -189,14 +203,14 @@ function mapContactEventRow(row: {
   };
 }
 
-async function fetchProfileName(userId: string, email?: string): Promise<string> {
-  const { data } = await supabase.from("profiles").select("name").eq("id", userId).maybeSingle();
-  if (data?.name) return data.name;
+async function fetchProfile(userId: string, email?: string): Promise<{ name: string; isAdmin: boolean }> {
+  const { data } = await supabase.from("profiles").select("name, is_admin").eq("id", userId).maybeSingle();
+  if (data?.name) return { name: data.name, isAdmin: Boolean(data.is_admin) };
   // The DB trigger that creates the profile row runs asynchronously right after signup —
   // give it one retry before falling back to a client-side default.
   await new Promise((resolve) => setTimeout(resolve, 500));
-  const retry = await supabase.from("profiles").select("name").eq("id", userId).maybeSingle();
-  return retry.data?.name ?? email?.split("@")[0] ?? "Neighbor";
+  const retry = await supabase.from("profiles").select("name, is_admin").eq("id", userId).maybeSingle();
+  return { name: retry.data?.name ?? email?.split("@")[0] ?? "Neighbor", isAdmin: Boolean(retry.data?.is_admin) };
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -207,6 +221,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [contactEvents, setContactEvents] = useState<ContactEvent[]>([]);
   const [trustStats, setTrustStats] = useState<TrustStats>(defaultTrustStats);
+  const [myClaims, setMyClaims] = useState<Record<string, ClaimStatus>>({});
 
   const fetchProviders = useCallback(async (cityFilter?: string | null) => {
     let query = supabase.from("providers").select("*, reviews(*)").order("created_at", { ascending: true });
@@ -237,11 +252,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTrustStats({ recommendations, reviews, neighborsHelped: reviews + recommendations, isTrusted: reviews + recommendations >= 3 });
   }, []);
 
+  const fetchMyClaims = useCallback(async (userId: string) => {
+    const { data } = await supabase.from("provider_claims").select("provider_id, status").eq("user_id", userId);
+    setMyClaims(Object.fromEntries((data ?? []).map((r) => [r.provider_id, r.status as ClaimStatus])));
+  }, []);
+
   const loadSignedInExtras = useCallback(
     async (userId: string) => {
-      await Promise.all([fetchSaved(userId), fetchContactEvents(userId), fetchTrustStats(userId)]);
+      await Promise.all([fetchSaved(userId), fetchContactEvents(userId), fetchTrustStats(userId), fetchMyClaims(userId)]);
     },
-    [fetchSaved, fetchContactEvents, fetchTrustStats]
+    [fetchSaved, fetchContactEvents, fetchTrustStats, fetchMyClaims]
   );
 
   // The one place a signed-in session is set up, whichever way it arrived (stored session,
@@ -254,9 +274,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (user: { id: string; email?: string }) => {
       if (sessionUserId.current === user.id) return;
       sessionUserId.current = user.id;
-      const [name] = await Promise.all([fetchProfileName(user.id, user.email), loadSignedInExtras(user.id)]);
+      const [profile] = await Promise.all([fetchProfile(user.id, user.email), loadSignedInExtras(user.id)]);
       if (sessionUserId.current !== user.id) return; // signed out (or switched) while loading
-      setAuth({ status: "signedIn", id: user.id, name, email: user.email });
+      setAuth({ status: "signedIn", id: user.id, name: profile.name, email: user.email, isAdmin: profile.isAdmin });
     },
     [loadSignedInExtras]
   );
@@ -299,6 +319,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setSavedIds([]);
         setContactEvents([]);
         setTrustStats(defaultTrustStats);
+        setMyClaims({});
       } else if (event === "SIGNED_IN" && session?.user) {
         // Deferred: supabase-js holds its auth lock while this callback runs, so making
         // Supabase calls from inside it directly can deadlock.
@@ -356,6 +377,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       userCoords: input.coords ?? l.userCoords,
     }));
   }, []);
+
+  const submitClaim = useCallback(
+    async (input: ClaimInput) => {
+      if (auth.status !== "signedIn" || !auth.id) return { error: "Sign in to claim a listing." };
+      const { error } = await supabase.from("provider_claims").insert({
+        provider_id: input.providerId,
+        user_id: auth.id,
+        role_title: input.roleTitle,
+        contact_phone: input.contactPhone || null,
+        note: input.note,
+      });
+      // 23505 = the unique (provider, user) constraint: they have already claimed this one.
+      if (error && error.code !== "23505") return { error: "We couldn't submit your claim. Please try again." };
+      setMyClaims((c) => ({ ...c, [input.providerId]: c[input.providerId] ?? "pending" }));
+      return {};
+    },
+    [auth]
+  );
+
+  const fetchPendingClaims = useCallback(async () => {
+    const { data, error } = await supabase.rpc("admin_pending_claims");
+    if (error) return { claims: [], error: error.message };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const claims: PendingClaim[] = ((data ?? []) as any[]).map((r) => ({
+      id: r.claim_id,
+      providerId: r.provider_id,
+      providerName: r.provider_name,
+      providerPhone: r.provider_phone ?? undefined,
+      claimantName: r.claimant_name,
+      claimantEmail: r.claimant_email,
+      roleTitle: r.role_title,
+      contactPhone: r.contact_phone ?? undefined,
+      note: r.note ?? "",
+      createdAt: r.created_at,
+    }));
+    return { claims };
+  }, []);
+
+  const reviewClaim = useCallback(
+    async (claimId: string, approve: boolean) => {
+      const { error } = await supabase.rpc("review_claim", { claim_id: claimId, approve });
+      if (error) return { error: error.message };
+      // An approval changes the listing's owner/claimed state.
+      if (approve) await fetchProviders(local.locationScope === "city" ? local.city : null);
+      return {};
+    },
+    [fetchProviders, local.locationScope, local.city]
+  );
 
   const signInWithEmail = useCallback(async (email: string, name?: string) => {
     // The email carries a sign-in link (and, once the template includes it, a 6-digit code).
@@ -549,6 +618,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     consumePendingAction,
     getProvider,
     fetchGoogleReviews,
+    myClaims,
+    submitClaim,
+    fetchPendingClaims,
+    reviewClaim,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

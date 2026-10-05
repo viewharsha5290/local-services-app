@@ -53,6 +53,8 @@ export interface Provider {
   googleRating?: number;
   googleRatingCount?: number;
   googleMapsUri?: string;
+  /** The signed-up user who manages this listing, once an admin has approved their claim. */
+  ownerId?: string;
 }
 
 export type ContactMethod = "whatsapp" | "sms" | "call" | "chat";
@@ -71,11 +73,29 @@ export type PendingAction =
   | { type: "save"; providerId: string }
   | { type: "review"; providerId: string }
   | { type: "recommend" }
+  | { type: "claim"; providerId: string }
   | null;
+
+export type ClaimStatus = "pending" | "approved" | "rejected";
+
+/** A row in the admin review queue (see admin_pending_claims() in supabase/schema.sql). */
+export interface PendingClaim {
+  id: string;
+  providerId: string;
+  providerName: string;
+  providerPhone?: string;
+  claimantName: string;
+  claimantEmail: string;
+  roleTitle: string;
+  contactPhone?: string;
+  note: string;
+  createdAt: string;
+}
 
 export interface AuthState {
   status: "guest" | "signedIn";
   id?: string;
   name?: string;
   email?: string;
+  isAdmin?: boolean;
 }

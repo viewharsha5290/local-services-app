@@ -235,6 +235,14 @@ Open [http://localhost:3000](http://localhost:3000). Or use the **"Local Service
 npm run build   # production build + typecheck
 ```
 
+## Claiming a listing
+
+A business can ask to manage its own listing: "Is this your business? Claim this listing" at the bottom of a provider page opens a short form (role, optional phone and note) after sign-in. Claims are **approved manually** — an admin reviews them at `/admin/claims` (linked from Profile for admins) and should confirm with the business by calling the number already on the listing, not the one the claimant supplied. Approval sets `providers.owner_id` and `claimed`, shows a "Claimed by business" badge, and closes competing claims.
+
+The rules live in the database (`supabase/migration_006_provider_claims.sql`): claims can only be inserted as pending and as yourself; decisions go through the `review_claim()` function, which refuses non-admins; users cannot edit `is_admin` on their own profile or add a listing that is already claimed, verified or owned. To make someone an admin, set `profiles.is_admin = true` for their row in the Supabase table editor.
+
+Owning a listing doesn't unlock editing yet — that arrives with provider references and photos. In-app chat stays off (`CHAT_ENABLED` in `lib/data.ts`) because it is still a local mock.
+
 ## Known Limitations
 
 - Apple/Google sign-in buttons are visual stubs (disabled) — no OAuth provider wired up yet, only email OTP.

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Bookmark, Check, ExternalLink, Phone, Share2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Bookmark, Check, ExternalLink, Phone, Share2, ShieldCheck } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { GoogleRating, Stars } from "@/components/Stars";
-import { GoogleReview, Provider } from "@/lib/types";
+import { ClaimStatus, GoogleReview, Provider } from "@/lib/types";
 import { useApp } from "@/lib/store";
 import { useRequireAuth } from "@/lib/useActions";
 import { useSheet } from "@/components/SheetProvider";
@@ -17,7 +17,7 @@ import { formatLocationMeta } from "@/lib/format";
 export default function ProviderDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { getProvider, isSaved, logContact } = useApp();
+  const { auth, getProvider, isSaved, logContact, myClaims } = useApp();
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
   const [shared, setShared] = useState(false);
@@ -86,6 +86,11 @@ export default function ProviderDetailPage() {
               {provider.verified && (
                 <span className="tag tag-accent" style={{ display: "flex", alignItems: "center", gap: 3 }}>
                   <ShieldCheck size={11} /> Verified
+                </span>
+              )}
+              {provider.claimed && (
+                <span className="tag tag-outline" style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <BadgeCheck size={11} /> Claimed by business
                 </span>
               )}
               {provider.reviewCount > 0 && (
@@ -161,7 +166,58 @@ export default function ProviderDetailPage() {
         </button>
 
         <GoogleReviewsSection provider={provider} />
+
+        <ClaimRow
+          provider={provider}
+          isOwner={Boolean(auth.id) && provider.ownerId === auth.id}
+          claimStatus={myClaims[provider.id]}
+          onClaim={() => requireAuth({ type: "claim", providerId: provider.id })}
+        />
       </div>
+    </>
+  );
+}
+
+/** Where a business starts (or follows) a claim on its own listing. Deliberately low-key and at
+ * the bottom of the page — it is for the business, not for the neighbors browsing. */
+function ClaimRow({
+  provider,
+  isOwner,
+  claimStatus,
+  onClaim,
+}: {
+  provider: Provider;
+  isOwner: boolean;
+  claimStatus?: ClaimStatus;
+  onClaim: () => void;
+}) {
+  let content: React.ReactNode;
+  if (isOwner) {
+    content = (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+        <BadgeCheck size={13} color="var(--color-accent-700)" /> You manage this listing.
+      </span>
+    );
+  } else if (provider.ownerId) {
+    return null; // someone else manages it — nothing to offer
+  } else if (claimStatus === "pending") {
+    content = "Your claim on this listing is being reviewed. We'll confirm it with the business first.";
+  } else if (claimStatus === "rejected") {
+    content = "Your claim on this listing wasn't approved.";
+  } else {
+    content = (
+      <>
+        Is this your business?{" "}
+        <button type="button" className="btn btn-ghost" style={{ padding: 0, display: "inline", minHeight: 0, fontSize: "inherit" }} onClick={onClaim}>
+          Claim this listing
+        </button>
+      </>
+    );
+  }
+  return (
+    <>
+      <div className="hr" />
+      <p style={{ fontSize: 12.5, color: "var(--color-neutral-600)", margin: "14px 0 20px", textAlign: "center" }}>{content}</p>
     </>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, Send, ShieldCheck } from "lucide-react";
+import { CHAT_ENABLED } from "@/lib/data";
 import { useApp } from "@/lib/store";
 
 interface Message {
@@ -34,10 +35,10 @@ export default function ChatPage() {
     );
   }
 
-  if (!provider.claimed) {
+  if (!CHAT_ENABLED || !provider.claimed) {
     return (
       <div className="app-main no-tabbar" style={{ paddingTop: 20 }}>
-        <p>{provider.name} hasn&rsquo;t claimed their profile yet, so in-app chat isn&rsquo;t available. Use Call, WhatsApp or SMS instead.</p>
+        <p>{`${provider.name} can’t be reached by in-app chat yet. Use Call, WhatsApp or SMS instead.`}</p>
         <button type="button" className="btn btn-secondary" onClick={() => router.push(`/provider/${provider.id}`)}>
           Back to profile
         </button>

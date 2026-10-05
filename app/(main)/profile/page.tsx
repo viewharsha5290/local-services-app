@@ -74,6 +74,11 @@ export default function ProfilePage() {
           <div className="list-row" style={{ cursor: "default" }}>
             My reviews<span className="v">{trustStats.reviews}</span>
           </div>
+          {auth.isAdmin && (
+            <button type="button" className="list-row" onClick={() => router.push("/admin/claims")}>
+              Review listing claims<span className="v">Admin</span>
+            </button>
+          )}
           <button type="button" className="list-row" onClick={() => router.push("/saved")}>
             Saved providers<span className="v">{savedIds.length}</span>
           </button>

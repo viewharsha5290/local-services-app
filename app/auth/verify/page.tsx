@@ -8,7 +8,7 @@ import { useActionResolver } from "@/lib/useActions";
 import { PendingAction } from "@/lib/types";
 
 function destinationFor(action: PendingAction) {
-  if (action?.type === "save" || action?.type === "review") return `/provider/${action.providerId}`;
+  if (action?.type === "save" || action?.type === "review" || action?.type === "claim") return `/provider/${action.providerId}`;
   if (action?.type === "recommend") return "/search";
   return "/profile";
 }

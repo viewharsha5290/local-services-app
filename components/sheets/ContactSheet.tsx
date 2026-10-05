@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, MessageCircle, MessageSquareText, Phone, Send } from "lucide-react";
 import { Provider } from "@/lib/types";
 import { useApp } from "@/lib/store";
+import { CHAT_ENABLED } from "@/lib/data";
 import { useSheet } from "@/components/SheetProvider";
 
 export function ContactSheet({ provider }: { provider: Provider }) {
   const { logContact } = useApp();
   const { close } = useSheet();
   const router = useRouter();
+  const chatAvailable = CHAT_ENABLED && provider.claimed;
 
   function go(method: "whatsapp" | "sms" | "call" | "chat") {
     logContact(provider.id, provider.name, method);
@@ -25,12 +27,12 @@ export function ContactSheet({ provider }: { provider: Provider }) {
     <div>
       <h3 style={{ margin: "0 0 4px" }}>Contact {provider.name}</h3>
       <p style={{ fontSize: 12, opacity: 0.7, margin: "0 0 8px" }}>
-        {provider.claimed
+        {chatAvailable
           ? "Message in-app, or reach them directly — providers don't need this app installed."
           : "Opens your chat app — providers don't need this app installed."}
       </p>
       <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
-        {provider.claimed && (
+        {chatAvailable && (
           <button type="button" className="list-row" onClick={() => go("chat")}>
             <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Send size={18} color="var(--color-accent-700)" />

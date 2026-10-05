@@ -17,9 +17,13 @@ const COPY: Record<string, { title: string; body: string }> = {
     title: "Sign in to recommend a provider",
     body: "Recommendations are tied to a real neighbor — that's what keeps them trustworthy. Takes about 30 seconds.",
   },
+  claim: {
+    title: "Sign in to claim this listing",
+    body: "A claim is tied to your account so we can confirm it with the business. Takes about 30 seconds.",
+  },
 };
 
-export function AuthGateSheet({ reason }: { reason: "save" | "review" | "recommend" }) {
+export function AuthGateSheet({ reason }: { reason: "save" | "review" | "recommend" | "claim" }) {
   const { close } = useSheet();
   const { setPendingAction } = useApp();
   const router = useRouter();

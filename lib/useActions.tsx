@@ -6,6 +6,7 @@ import { useSheet } from "@/components/SheetProvider";
 import { WriteReviewSheet } from "@/components/sheets/WriteReviewSheet";
 import { RecommendSheet } from "@/components/sheets/RecommendSheet";
 import { AuthGateSheet } from "@/components/sheets/AuthGateSheet";
+import { ClaimSheet } from "@/components/sheets/ClaimSheet";
 import { PendingAction } from "./types";
 
 export function useActionResolver() {
@@ -26,6 +27,12 @@ export function useActionResolver() {
       }
       if (action.type === "recommend") {
         open(<RecommendSheet />);
+        return;
+      }
+      if (action.type === "claim") {
+        const provider = getProvider(action.providerId);
+        // Someone else may have been approved while this user was signing in.
+        if (provider && !provider.ownerId) open(<ClaimSheet provider={provider} />);
       }
     },
     [toggleSaved, getProvider, open]
