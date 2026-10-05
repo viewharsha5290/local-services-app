@@ -99,6 +99,14 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
+/** Fire-and-forget a write after an optimistic UI update. Supabase query builders are lazy —
+ * nothing is sent until they are awaited or `.then`-ed — so a bare call silently does nothing. */
+function send(query: PromiseLike<{ error: { message: string } | null }>) {
+  query.then(({ error }) => {
+    if (error) console.error("Supabase write failed:", error.message);
+  });
+}
+
 function uid(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -367,10 +375,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const alreadySaved = savedIds.includes(providerId);
       if (alreadySaved) {
         setSavedIds((ids) => ids.filter((id) => id !== providerId));
-        supabase.from("saved_providers").delete().eq("user_id", userId).eq("provider_id", providerId);
+        send(supabase.from("saved_providers").delete().eq("user_id", userId).eq("provider_id", providerId));
       } else {
         setSavedIds((ids) => [...ids, providerId]);
-        supabase.from("saved_providers").insert({ user_id: userId, provider_id: providerId });
+        send(supabase.from("saved_providers").insert({ user_id: userId, provider_id: providerId }));
       }
     },
     [auth, savedIds]
@@ -463,9 +471,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       setContactEvents((prev) => prev.map((e) => (e.id !== eventId ? e : action === "snooze" ? { ...e, followUpAt: nextFollowUpAt } : { ...e, resolved: true })));
       if (action === "snooze") {
-        supabase.from("contact_events").update({ follow_up_at: new Date(nextFollowUpAt).toISOString() }).eq("id", eventId);
+        send(supabase.from("contact_events").update({ follow_up_at: new Date(nextFollowUpAt).toISOString() }).eq("id", eventId));
       } else {
-        supabase.from("contact_events").update({ resolved: true }).eq("id", eventId);
+        send(supabase.from("contact_events").update({ resolved: true }).eq("id", eventId));
       }
       if (action === "hired" && rating) {
         const event = contactEvents.find((e) => e.id === eventId);
