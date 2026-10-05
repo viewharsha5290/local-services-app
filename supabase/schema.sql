@@ -119,7 +119,8 @@ create or replace function handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, name)
-  values (new.id, coalesce(split_part(new.email, '@', 1), 'Neighbor'));
+  -- The name entered on the sign-up page arrives as user metadata; fall back to the email prefix.
+  values (new.id, coalesce(nullif(left(trim(new.raw_user_meta_data ->> 'name'), 60), ''), split_part(new.email, '@', 1), 'Neighbor'));
   return new;
 end;
 $$ language plpgsql security definer;

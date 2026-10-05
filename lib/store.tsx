@@ -80,7 +80,9 @@ interface AppContextValue {
   pendingAction: PendingAction;
   trustStats: TrustStats;
   setLocation: (input: SetLocationInput) => void;
-  signInWithEmail: (email: string) => Promise<{ error?: string }>;
+  /** Emails a sign-in link + code. Pass `name` to create an account (sign-up); without it only
+   * existing accounts are emailed, and `noAccount` reports that the address isn't registered. */
+  signInWithEmail: (email: string, name?: string) => Promise<{ error?: string; noAccount?: boolean }>;
   verifyEmailCode: (email: string, code: string) => Promise<{ error?: string }>;
   signOut: () => void;
   toggleSaved: (providerId: string) => void;
@@ -355,11 +357,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const signInWithEmail = useCallback(async (email: string) => {
+  const signInWithEmail = useCallback(async (email: string, name?: string) => {
     // The email carries a sign-in link (and, once the template includes it, a 6-digit code).
     // The link returns to the verify page, which resumes the pending action for both paths.
     const emailRedirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/verify` : undefined;
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo } });
+    // `data` becomes the new user's metadata, which the handle_new_user trigger copies into
+    // profiles.name. It is ignored for an address that already has an account.
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: name ? { shouldCreateUser: true, emailRedirectTo, data: { name } } : { shouldCreateUser: false, emailRedirectTo },
+    });
+    if (error?.code === "otp_disabled") return { noAccount: true };
     return { error: error?.message };
   }, []);
 
