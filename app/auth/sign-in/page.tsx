@@ -57,7 +57,7 @@ export default function SignInPage() {
           {error && <span style={{ fontSize: 12, color: "#b3413a" }}>{error}</span>}
         </div>
         <button type="button" className="btn btn-primary btn-block" style={{ marginBottom: 16 }} onClick={continueWithEmail} disabled={sending}>
-          {sending ? "Sending code…" : "Continue"}
+          {sending ? "Sending email…" : "Continue"}
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, color: "var(--color-neutral-500)", fontSize: 11 }}>
           <span style={{ flex: 1, height: 1, background: "var(--color-divider)" }} />
@@ -71,7 +71,7 @@ export default function SignInPage() {
           Continue with Google
         </button>
         <p style={{ fontSize: 11, color: "var(--color-neutral-600)", margin: "16px 0 0" }}>
-          We&rsquo;ll email you a 6-digit code. Your email is never shown publicly.
+          We&rsquo;ll email you a sign-in link. Your email is never shown publicly.
         </p>
       </div>
       <button type="button" className="btn btn-ghost btn-block" onClick={skip}>

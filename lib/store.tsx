@@ -335,7 +335,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithEmail = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+    // The email carries a sign-in link (and, once the template includes it, a 6-digit code).
+    // The link returns to the verify page, which resumes the pending action for both paths.
+    const emailRedirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/verify` : undefined;
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo } });
     return { error: error?.message };
   }, []);
 

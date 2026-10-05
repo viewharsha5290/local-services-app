@@ -186,7 +186,7 @@ Required once, before `npm run dev` will show any providers:
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. In the SQL editor, run `supabase/schema.sql`, then `supabase/seed.sql` (optional if you'll run the Google import below).
-3. In Auth settings, confirm Email OTP is enabled and its template sends a 6-digit code (not just a magic-link button).
+3. In Auth settings: enable Email sign-in, set **Email OTP length to 6** (new projects default to 8; the verify page takes 6), and add your site origin(s) under URL Configuration → Redirect URLs. Sign-in works via the emailed link out of the box; the 6-digit code path additionally needs custom SMTP so the email template can be edited to include `{{ .Token }}`.
 4. Copy `.env.local.example` to `.env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` from the project's API settings page. The anon key is safe to expose client-side — RLS policies are what actually gate access.
 
 Without this, the app still runs (falls back to an empty provider list with a console warning) — useful for UI-only work, not for testing real data.
