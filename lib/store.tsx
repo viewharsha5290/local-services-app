@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
 import { AuthState, ContactEvent, ContactMethod, GoogleReview, PendingAction, Provider, Review } from "./types";
@@ -242,6 +242,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [fetchSaved, fetchContactEvents, fetchTrustStats]
   );
 
+  // The one place a signed-in session is set up, whichever way it arrived (stored session,
+  // code entry, or email link). supabase-js re-emits SIGNED_IN for the same user on tab focus
+  // and token refresh; re-running this then would refetch the saved list mid-write and clobber
+  // an optimistic save/unsave, so repeats for the current user are ignored. The user's data is
+  // loaded before auth flips to signed-in, so anything reacting to that sees it complete.
+  const sessionUserId = useRef<string | null>(null);
+  const establishSession = useCallback(
+    async (user: { id: string; email?: string }) => {
+      if (sessionUserId.current === user.id) return;
+      sessionUserId.current = user.id;
+      const [name] = await Promise.all([fetchProfileName(user.id, user.email), loadSignedInExtras(user.id)]);
+      if (sessionUserId.current !== user.id) return; // signed out (or switched) while loading
+      setAuth({ status: "signedIn", id: user.id, name, email: user.email });
+    },
+    [loadSignedInExtras]
+  );
+
   useEffect(() => {
     let active = true;
     let initialLocal = defaultLocal;
@@ -266,13 +283,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session?.user && active) {
-        const name = await fetchProfileName(session.user.id, session.user.email ?? undefined);
-        if (active) {
-          setAuth({ status: "signedIn", id: session.user.id, name, email: session.user.email ?? undefined });
-          await loadSignedInExtras(session.user.id);
-        }
-      }
+      if (session?.user && active) await establishSession(session.user);
 
       await fetchProviders(initialLocal.locationScope === "city" ? initialLocal.city : null);
       if (active) setHydrated(true);
@@ -281,14 +292,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_OUT") {
+        sessionUserId.current = null;
         setAuth({ status: "guest" });
         setSavedIds([]);
         setContactEvents([]);
         setTrustStats(defaultTrustStats);
       } else if (event === "SIGNED_IN" && session?.user) {
-        const name = await fetchProfileName(session.user.id, session.user.email ?? undefined);
-        setAuth({ status: "signedIn", id: session.user.id, name, email: session.user.email ?? undefined });
-        await loadSignedInExtras(session.user.id);
+        // Deferred: supabase-js holds its auth lock while this callback runs, so making
+        // Supabase calls from inside it directly can deadlock.
+        const user = session.user;
+        setTimeout(() => establishSession(user), 0);
       }
     });
 
@@ -354,14 +367,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (email: string, code: string) => {
       const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
       if (error) return { error: error.message };
-      if (data.session?.user) {
-        const name = await fetchProfileName(data.session.user.id, data.session.user.email ?? undefined);
-        setAuth({ status: "signedIn", id: data.session.user.id, name, email: data.session.user.email ?? undefined });
-        await loadSignedInExtras(data.session.user.id);
-      }
+      if (data.session?.user) await establishSession(data.session.user);
       return {};
     },
-    [loadSignedInExtras]
+    [establishSession]
   );
 
   const signOut = useCallback(() => {
