@@ -84,9 +84,17 @@ export default function ProfilePage() {
             </button>
           ))}
           {auth.isAdmin && (
-            <button type="button" className="list-row" onClick={() => router.push("/admin/claims")}>
-              Review listing claims<span className="v">Admin</span>
-            </button>
+            <>
+              <button type="button" className="list-row" onClick={() => router.push("/admin/claims")}>
+                Review listing claims<span className="v">Admin</span>
+              </button>
+              <button type="button" className="list-row" onClick={() => router.push("/admin/messages")}>
+                Messages from the contact form<span className="v">Admin</span>
+              </button>
+              <button type="button" className="list-row" onClick={() => router.push("/admin/categories")}>
+                Manage categories<span className="v">Admin</span>
+              </button>
+            </>
           )}
           <button type="button" className="list-row" onClick={() => router.push("/saved")}>
             Saved providers<span className="v">{savedIds.length}</span>
@@ -94,12 +102,12 @@ export default function ProfilePage() {
           <button type="button" className="list-row" onClick={() => router.push("/onboarding?change=1")}>
             Change location<span className="v">{locationLabel}</span>
           </button>
-          <div className="list-row" style={{ cursor: "default" }}>
-            Language<span className="v">English</span>
-          </div>
-          <div className="list-row" style={{ cursor: "default" }}>
-            Notifications<span className="v">On</span>
-          </div>
+          <button type="button" className="list-row" onClick={() => router.push("/contact")}>
+            Contact us<span className="v" />
+          </button>
+          <button type="button" className="list-row" onClick={() => router.push("/terms")}>
+            Terms and privacy<span className="v" />
+          </button>
           <button
             type="button"
             className="list-row"
@@ -142,12 +150,12 @@ function SettingsList({ locationLabel }: { locationLabel: string | null }) {
       <button type="button" className="list-row" onClick={() => router.push("/onboarding?change=1")}>
         Change location<span className="v">{locationLabel}</span>
       </button>
-      <div className="list-row" style={{ cursor: "default" }}>
-        Language<span className="v">English</span>
-      </div>
-      <div className="list-row" style={{ cursor: "default" }}>
-        About &amp; privacy<span className="v" />
-      </div>
+      <button type="button" className="list-row" onClick={() => router.push("/contact")}>
+        Contact us<span className="v" />
+      </button>
+      <button type="button" className="list-row" onClick={() => router.push("/terms")}>
+        Terms and privacy<span className="v" />
+      </button>
     </div>
   );
 }

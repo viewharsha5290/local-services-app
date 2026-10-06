@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Provider } from "@/lib/types";
 import { useApp } from "@/lib/store";
@@ -85,7 +86,14 @@ export function ClaimSheet({ provider }: { provider: Provider }) {
           onChange={(e) => setNote(e.target.value)}
         />
       </div>
-      {error && <p style={{ fontSize: 12, color: "#b3413a", margin: "0 0 12px" }}>{error}</p>}
+      <p className="legal" style={{ marginTop: 0 }}>
+        By submitting you confirm that you own this business or are authorized to act for it, and you agree to the{" "}
+        <Link href="/terms#businesses" onClick={close}>
+          terms for businesses
+        </Link>
+        .
+      </p>
+      {error && <p style={{ fontSize: 13, color: "var(--color-danger)", margin: "0 0 12px" }}>{error}</p>}
       <button type="button" className="btn btn-primary btn-block" style={{ marginBottom: 10 }} onClick={submit} disabled={sending}>
         {sending ? "Submitting…" : "Submit claim"}
       </button>

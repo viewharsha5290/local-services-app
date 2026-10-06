@@ -4,7 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
 import { PHOTO_BUCKET, photoPath, photoUrl, prepareImage } from "./photos";
-import { AuthState, ClaimStatus, ContactEvent, ContactMethod, GoogleReview, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
+import { DEFAULT_CATEGORIES } from "./categories";
+import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
@@ -137,6 +138,17 @@ interface AppContextValue {
   myClaims: Record<string, ClaimStatus>;
   submitClaim: (input: ClaimInput) => Promise<{ error?: string }>;
   /** Admin only — enforced by the database, not by this client. */
+  /** The trades listings are filed under, in display order. */
+  categories: CategoryInfo[];
+  /** Admin only (the database refuses anyone else). Pass `originalName` to change an existing one. */
+  saveCategory: (category: CategoryInfo, originalName?: string) => Promise<{ error?: string }>;
+  deleteCategory: (name: string) => Promise<{ error?: string }>;
+  setListingCategory: (providerId: string, category: string) => Promise<{ error?: string }>;
+  /** The contact form: anyone can send, only an admin can read. */
+  sendContactMessage: (input: { name: string; email: string; topic: ContactTopic; message: string }) => Promise<{ error?: string }>;
+  fetchContactMessages: () => Promise<{ messages: ContactMessage[]; error?: string }>;
+  setMessageHandled: (id: string, handled: boolean) => Promise<{ error?: string }>;
+  deleteContactMessage: (id: string) => Promise<{ error?: string }>;
   fetchPendingClaims: () => Promise<{ claims: PendingClaim[]; error?: string }>;
   reviewClaim: (claimId: string, approve: boolean) => Promise<{ error?: string }>;
   /** Listings the signed-in user manages, with their contact counts. Empty for everyone else. */
@@ -204,6 +216,23 @@ function mapProviderRow(row: any): Provider {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapCategoryRow(row: any): CategoryInfo {
+  return { name: row.name, tab: row.tab_label, one: row.one, many: row.many, hook: row.hook, icon: row.icon, art: row.art, sortOrder: row.sort_order };
+}
+
+function categoryRow(c: CategoryInfo) {
+  return { name: c.name.trim(), tab_label: c.tab.trim(), one: c.one.trim(), many: c.many.trim(), hook: c.hook.trim(), icon: c.icon, art: c.art, sort_order: c.sortOrder };
+}
+
+/** Postgres error codes worth explaining to the admin editing categories. */
+function categoryError(error: { code?: string; message: string }) {
+  if (error.code === "23505") return "There's already a category with that name.";
+  if (error.code === "23514") return "One of the fields is too short or too long.";
+  if (error.code === "23503") return "Listings still use this category. Move them to another one first.";
+  return "Couldn't save that. Please try again.";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapGoogleReviewRow(row: any): GoogleReview {
   return {
     id: row.id,
@@ -257,6 +286,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [trustStats, setTrustStats] = useState<TrustStats>(defaultTrustStats);
   const [myClaims, setMyClaims] = useState<Record<string, ClaimStatus>>({});
   const [myListings, setMyListings] = useState<ListingStats[]>([]);
+  const [categories, setCategories] = useState<CategoryInfo[]>(DEFAULT_CATEGORIES);
 
   const fetchProviders = useCallback(async (cityFilter?: string | null) => {
     let query = supabase.from("providers").select("*, reviews:reviews_public(*)").order("created_at", { ascending: true });
@@ -266,6 +296,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await query;
     if (!error && data) setProvidersBase(data.map(mapProviderRow));
   }, []);
+
+  const loadCategories = useCallback(async () => {
+    const { data, error } = await supabase.from("categories").select("*").order("sort_order", { ascending: true }).order("name", { ascending: true });
+    return !error && data?.length ? data.map(mapCategoryRow) : null;
+  }, []);
+
+  const refreshCategories = useCallback(async () => {
+    const list = await loadCategories();
+    if (list) setCategories(list);
+  }, [loadCategories]);
+
+  useEffect(() => {
+    let active = true;
+    loadCategories().then((list) => {
+      if (active && list) setCategories(list);
+    });
+    return () => {
+      active = false;
+    };
+  }, [loadCategories]);
 
   const refreshProvider = useCallback(async (id: string) => {
     const { data } = await supabase.from("providers").select("*, reviews:reviews_public(*)").eq("id", id).maybeSingle();
@@ -565,6 +615,73 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [establishSession]
   );
 
+  const currentCity = local.locationScope === "city" ? local.city : null;
+
+  const saveCategory = useCallback(
+    async (category: CategoryInfo, originalName?: string) => {
+      // .select() so a write the database quietly refused (not an admin) isn't reported as saved.
+      const query = originalName
+        ? supabase.from("categories").update(categoryRow(category)).eq("name", originalName).select("name")
+        : supabase.from("categories").insert(categoryRow(category)).select("name");
+      const { data, error } = await query;
+      if (error) return { error: categoryError(error) };
+      if (!data?.length) return { error: "Only an admin can change categories." };
+      await refreshCategories();
+      // a rename cascades to the listings filed under it
+      if (originalName && originalName !== category.name.trim()) await fetchProviders(currentCity);
+      return {};
+    },
+    [refreshCategories, fetchProviders, currentCity]
+  );
+
+  const deleteCategory = useCallback(
+    async (name: string) => {
+      const { data, error } = await supabase.from("categories").delete().eq("name", name).select("name");
+      if (error) return { error: categoryError(error) };
+      if (!data?.length) return { error: "Only an admin can change categories." };
+      await refreshCategories();
+      return {};
+    },
+    [refreshCategories]
+  );
+
+  const setListingCategory = useCallback(
+    async (providerId: string, category: string) => {
+      const { error } = await supabase.rpc("admin_set_listing_category", { p_provider_id: providerId, p_category: category });
+      if (error) return { error: listingError(error.message, "Couldn't change the category. Please try again.") };
+      await refreshProvider(providerId);
+      return {};
+    },
+    [refreshProvider]
+  );
+
+  const sendContactMessage = useCallback(async (input: { name: string; email: string; topic: ContactTopic; message: string }) => {
+    const { error } = await supabase.rpc("send_contact_message", { p_name: input.name, p_email: input.email, p_topic: input.topic, p_message: input.message });
+    if (!error) return {};
+    // the function's own messages are written for the sender; anything else is ours to apologise for
+    const known = /^(Enter|Choose|Tell us|That message|You have|We are)/.test(error.message);
+    return { error: known ? `${error.message}.` : "Couldn't send your message. Please try again in a moment." };
+  }, []);
+
+  const fetchContactMessages = useCallback(async () => {
+    const { data, error } = await supabase.from("contact_messages").select("*").order("created_at", { ascending: false }).limit(200);
+    if (error) return { messages: [], error: "Couldn't load messages." };
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      messages: (data as any[]).map((r): ContactMessage => ({ id: r.id, createdAt: r.created_at, name: r.name, email: r.email, topic: r.topic, message: r.message, handled: r.handled })),
+    };
+  }, []);
+
+  const setMessageHandled = useCallback(async (id: string, handled: boolean) => {
+    const { data, error } = await supabase.from("contact_messages").update({ handled }).eq("id", id).select("id");
+    return error || !data?.length ? { error: "Couldn't update that message." } : {};
+  }, []);
+
+  const deleteContactMessage = useCallback(async (id: string) => {
+    const { data, error } = await supabase.from("contact_messages").delete().eq("id", id).select("id");
+    return error || !data?.length ? { error: "Couldn't delete that message." } : {};
+  }, []);
+
   const signOut = useCallback(() => {
     supabase.auth.signOut();
   }, []);
@@ -791,6 +908,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     submitClaim,
     fetchPendingClaims,
     reviewClaim,
+    categories,
+    saveCategory,
+    deleteCategory,
+    setListingCategory,
+    sendContactMessage,
+    fetchContactMessages,
+    setMessageHandled,
+    deleteContactMessage,
     myListings,
     refreshMyListings,
   };

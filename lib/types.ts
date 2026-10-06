@@ -1,6 +1,21 @@
-export type Category = "Handyman" | "Mechanic" | "Attorney" | "Auditor" | "Clergy" | "Electrician";
+/** A trade's name, as stored on a listing. The set of trades is data (the `categories` table). */
+export type Category = string;
 
-export const CATEGORIES: Category[] = ["Handyman", "Mechanic", "Attorney", "Auditor", "Clergy", "Electrician"];
+/** One trade: its name plus the wording, icon and cover illustration the site uses for it. */
+export interface CategoryInfo {
+  name: Category;
+  /** Short label for the row of trades on the home page, e.g. "Home fixes". */
+  tab: string;
+  /** How to count them: "1 electrician", "21 electricians". */
+  one: string;
+  many: string;
+  /** The question a neighbour is usually asking, e.g. "Lights flickering?". */
+  hook: string;
+  /** Keys into the icon set (lib/categoryIcons.tsx) and illustration set (components/Cover.tsx). */
+  icon: string;
+  art: string;
+  sortOrder: number;
+}
 
 export interface Review {
   id: string;
@@ -109,6 +124,19 @@ export interface ListingStats {
   allTime: number;
   /** When the first contact was counted; undefined until there is one. */
   countingSince?: string;
+}
+
+export type ContactTopic = "category" | "listing" | "remove" | "review" | "privacy" | "problem" | "other";
+
+/** A message sent to the admin through the contact form (see send_contact_message()). */
+export interface ContactMessage {
+  id: string;
+  createdAt: string;
+  name: string;
+  email: string;
+  topic: ContactTopic;
+  message: string;
+  handled: boolean;
 }
 
 export interface AuthState {

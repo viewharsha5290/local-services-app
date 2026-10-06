@@ -1,16 +1,75 @@
-import { Calculator, Church, Hammer, Scale, Wrench, Zap } from "lucide-react";
-import { Category } from "./types";
+import { createElement } from "react";
+import {
+  Baby,
+  Briefcase,
+  Bug,
+  Calculator,
+  Camera,
+  Car,
+  Church,
+  Droplets,
+  Flower2,
+  GraduationCap,
+  Hammer,
+  HardHat,
+  House,
+  KeyRound,
+  Landmark,
+  Laptop,
+  Paintbrush,
+  PawPrint,
+  Scale,
+  Scissors,
+  Shirt,
+  Snowflake,
+  Sofa,
+  Sparkles,
+  Stethoscope,
+  Trees,
+  Truck,
+  Utensils,
+  Wrench,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 
-export const CATEGORY_ICONS: Record<Category, typeof Wrench> = {
-  Handyman: Hammer,
-  Mechanic: Wrench,
-  Attorney: Scale,
-  Auditor: Calculator,
-  Clergy: Church,
-  Electrician: Zap,
-};
+/** The icons a category can use. A category stores the key (categories.icon); `label` is what the
+ * admin sees when picking one. */
+export const ICON_OPTIONS: { key: string; label: string; Icon: LucideIcon }[] = [
+  { key: "hammer", label: "Hammer", Icon: Hammer },
+  { key: "wrench", label: "Wrench", Icon: Wrench },
+  { key: "zap", label: "Lightning", Icon: Zap },
+  { key: "hard-hat", label: "Hard hat", Icon: HardHat },
+  { key: "paintbrush", label: "Paintbrush", Icon: Paintbrush },
+  { key: "droplets", label: "Water", Icon: Droplets },
+  { key: "snowflake", label: "Heating and cooling", Icon: Snowflake },
+  { key: "house", label: "House", Icon: House },
+  { key: "key", label: "Key", Icon: KeyRound },
+  { key: "sofa", label: "Furniture", Icon: Sofa },
+  { key: "sparkles", label: "Cleaning", Icon: Sparkles },
+  { key: "trees", label: "Trees", Icon: Trees },
+  { key: "flower", label: "Flower", Icon: Flower2 },
+  { key: "bug", label: "Pest control", Icon: Bug },
+  { key: "truck", label: "Truck", Icon: Truck },
+  { key: "car", label: "Car", Icon: Car },
+  { key: "scale", label: "Scales", Icon: Scale },
+  { key: "calculator", label: "Calculator", Icon: Calculator },
+  { key: "landmark", label: "Bank", Icon: Landmark },
+  { key: "briefcase", label: "Briefcase", Icon: Briefcase },
+  { key: "laptop", label: "Laptop", Icon: Laptop },
+  { key: "camera", label: "Camera", Icon: Camera },
+  { key: "scissors", label: "Scissors", Icon: Scissors },
+  { key: "shirt", label: "Clothing", Icon: Shirt },
+  { key: "utensils", label: "Food", Icon: Utensils },
+  { key: "stethoscope", label: "Health", Icon: Stethoscope },
+  { key: "graduation-cap", label: "Teaching", Icon: GraduationCap },
+  { key: "baby", label: "Childcare", Icon: Baby },
+  { key: "paw", label: "Pets", Icon: PawPrint },
+  { key: "church", label: "Place of worship", Icon: Church },
+];
 
-export function CategoryIcon({ category, size = 16 }: { category: Category; size?: number }) {
-  const Icon = CATEGORY_ICONS[category];
-  return <Icon size={size} strokeWidth={1.8} />;
+const BY_KEY = new Map(ICON_OPTIONS.map((o) => [o.key, o.Icon]));
+
+export function CategoryIcon({ icon, size = 16 }: { icon: string; size?: number }) {
+  return createElement(BY_KEY.get(icon) ?? Briefcase, { size, strokeWidth: 1.8 });
 }

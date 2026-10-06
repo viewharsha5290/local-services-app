@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ImagePlus, Star, Trash2, X } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
@@ -57,12 +58,49 @@ export default function EditListingPage() {
     <div className="content-narrow" style={{ paddingBottom: 48 }}>
       <TopBar back title="Edit listing" subtitle={provider.name} />
       {/* keyed so the form starts over from the saved values if the listing is reloaded */}
+      {auth.isAdmin && <CategoryForm provider={provider} />}
       <DetailsForm key={provider.id} provider={provider} />
       <PhotosEditor provider={provider} />
       <p className="text-muted" style={{ fontSize: 13.5, marginTop: 28 }}>
         The business name and trade can&rsquo;t be changed here. Reviews and ratings come from neighbours and from Google, and can&rsquo;t be edited by the business.
       </p>
     </div>
+  );
+}
+
+/** Admins only: owners can't change their own trade (the database function refuses them too). */
+function CategoryForm({ provider }: { provider: Provider }) {
+  const { categories, setListingCategory } = useApp();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function change(next: string) {
+    setSaving(true);
+    setError(null);
+    const result = await setListingCategory(provider.id, next);
+    setSaving(false);
+    if (result.error) setError(result.error);
+  }
+
+  return (
+    <section className="editblock">
+      <h2>Category</h2>
+      <div className="field">
+        <label htmlFor="edit-category">Filed under (admin only)</label>
+        <select id="edit-category" className="input" value={provider.category} disabled={saving} onChange={(e) => change(e.target.value)}>
+          {!categories.some((c) => c.name === provider.category) && <option value={provider.category}>{provider.category}</option>}
+          {categories.map((c) => (
+            <option key={c.name} value={c.name}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <span className="hint">
+          {saving ? "Saving…" : "Changes as soon as you pick one."} <Link href="/admin/categories">Manage categories</Link>
+        </span>
+      </div>
+      {error && <p role="alert" style={{ color: "var(--color-danger)", fontSize: 14, margin: 0 }}>{error}</p>}
+    </section>
   );
 }
 
@@ -294,7 +332,8 @@ function PhotosEditor({ provider }: { provider: Provider }) {
       </div>
       {error && <p role="alert" style={{ color: "var(--color-danger)", fontSize: 14, margin: 0 }}>{error}</p>}
       <p className="text-muted" style={{ fontSize: 13, margin: 0 }}>
-        Only add photos you took or have permission to use. We resize them and remove location data before they&rsquo;re published.
+        Only add photos you took or have permission to use, and none that show people or addresses without their say-so. We resize them and remove
+        location data before they&rsquo;re published. See the <Link href="/terms#businesses">terms for businesses</Link>.
       </p>
     </section>
   );

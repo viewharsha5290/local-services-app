@@ -5,19 +5,20 @@ import { useRouter } from "next/navigation";
 import { useApp } from "@/lib/store";
 import { useSheet } from "@/components/SheetProvider";
 import { StarPicker } from "@/components/Stars";
-import { CATEGORIES, Category } from "@/lib/types";
+import Link from "next/link";
 
 export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?: boolean }) {
-  const { addRecommendation } = useApp();
+  const { addRecommendation, categories } = useApp();
   const { close } = useSheet();
   const router = useRouter();
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<Category>(CATEGORIES[0]);
+  // No default: filing someone under the first trade in the list by accident helps nobody.
+  const [category, setCategory] = useState("");
   const [phone, setPhone] = useState("");
   const [rating, setRating] = useState(5);
   const [note, setNote] = useState("");
 
-  const canSubmit = name.trim().length > 1 && note.trim().length > 3;
+  const canSubmit = name.trim().length > 1 && note.trim().length > 3 && category !== "";
 
   async function submit() {
     if (!canSubmit) return;
@@ -35,14 +36,23 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
         <input className="input" placeholder="e.g. Sarah Kaur, CPA" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field" style={{ marginBottom: 12 }}>
-        <label>Category</label>
-        <select className="input" value={category} onChange={(e) => setCategory(e.target.value as Category)}>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
+        <label htmlFor="recommend-category">Category</label>
+        <select id="recommend-category" className="input" required value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="" disabled>
+            Choose a category
+          </option>
+          {categories.map((c) => (
+            <option key={c.name} value={c.name}>
+              {c.name}
             </option>
           ))}
         </select>
+        <span className="hint">
+          Don&rsquo;t see the right one?{" "}
+          <Link href="/contact?topic=category" onClick={close}>
+            Suggest a category
+          </Link>
+        </span>
       </div>
       <div className="field" style={{ marginBottom: 12 }}>
         <label>Phone number</label>
@@ -62,6 +72,14 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
           onChange={(e) => setNote(e.target.value)}
         />
       </div>
+      <p className="legal">
+        Only recommend a business you&rsquo;ve used yourself, and only share the number it gives out to customers. Your recommendation is public and
+        shows your name. By posting you agree to the{" "}
+        <Link href="/terms#reviews" onClick={close}>
+          review rules
+        </Link>
+        .
+      </p>
       <button type="button" className="btn btn-primary btn-block" disabled={!canSubmit} onClick={submit}>
         Post recommendation
       </button>

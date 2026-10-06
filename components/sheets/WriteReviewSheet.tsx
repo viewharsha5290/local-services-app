@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Provider, Review } from "@/lib/types";
 import { useApp } from "@/lib/store";
 import { useSheet } from "@/components/SheetProvider";
@@ -76,6 +77,13 @@ export function WriteReviewSheet({ provider, review }: { provider: Provider; rev
           <span className="sub">Shows as &ldquo;A neighbour&rdquo;. It stays tied to your account, so you can still edit or delete it.</span>
         </span>
       </label>
+      <p className="legal">
+        Write about your own experience and keep it honest. Reviews are public. By posting you agree to the{" "}
+        <Link href="/terms#reviews" onClick={close}>
+          review rules
+        </Link>
+        .
+      </p>
       <button type="button" className="btn btn-primary btn-block" onClick={submit} disabled={saving}>
         {review ? (saving ? "Saving…" : "Save changes") : "Post review"}
       </button>

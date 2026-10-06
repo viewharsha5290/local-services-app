@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useApp } from "@/lib/store";
@@ -101,6 +102,10 @@ export default function SignInPage() {
         <button type="button" className="btn btn-primary btn-block" style={{ marginBottom: 12 }} onClick={submit} disabled={sending}>
           {sending ? "Sending email…" : mode === "signup" ? "Create account" : "Send sign-in link"}
         </button>
+        <p className="legal" style={{ textAlign: "center", marginTop: 0 }}>
+          {mode === "signup" ? "By creating an account" : "By signing in"} you agree to our <Link href="/terms">Terms</Link> and{" "}
+          <Link href="/privacy">Privacy Policy</Link>. You must be 18 or older.
+        </p>
         <p style={{ fontSize: 12.5, margin: "0 0 16px", textAlign: "center" }}>
           {mode === "signup" ? "Already have an account? " : "New here? "}
           <button

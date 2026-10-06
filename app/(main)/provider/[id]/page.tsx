@@ -286,6 +286,12 @@ export default function ProviderDetailPage() {
         />
       </div>
 
+      <p className="legal" style={{ textAlign: "center", marginTop: 24 }}>
+        The Local Services is a directory. We don&rsquo;t employ, vet or guarantee this business, so check licences, insurance and references
+        yourself before hiring. <Link href={`/contact?topic=remove&listing=${encodeURIComponent(provider.name)}`}>Report or correct this listing</Link> ·{" "}
+        <Link href="/terms">Terms</Link>
+      </p>
+
       <div className="contactbar">
         <div style={{ minWidth: 0 }}>
           <div className="t">Free to contact</div>

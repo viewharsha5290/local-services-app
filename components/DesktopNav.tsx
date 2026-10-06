@@ -5,18 +5,9 @@ import { usePathname } from "next/navigation";
 import { CirclePlus, Heart, Palette, Search, User } from "lucide-react";
 import { useRequireAuth } from "@/lib/useActions";
 import { useTheme } from "@/lib/useTheme";
+import { BrandMark } from "./BrandMark";
 import { useSheet } from "./SheetProvider";
 import { ThemeSheet } from "./ThemePicker";
-
-export function BrandMark({ size = 18 }: { size?: number }) {
-  return (
-    <span className="brand-mark" aria-hidden="true">
-      <svg width={size} height={size} viewBox="0 0 14 14">
-        <path d="M1.5 7L7 1.5 12.5 7v5.5h-11z" fill="currentColor" />
-      </svg>
-    </span>
-  );
-}
 
 export function DesktopNav() {
   const pathname = usePathname();

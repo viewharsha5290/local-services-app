@@ -10,10 +10,10 @@ import { StarPicker } from "@/components/Stars";
 import { ThemeSheet } from "@/components/ThemePicker";
 import { useSheet } from "@/components/SheetProvider";
 import { useApp } from "@/lib/store";
-import { CATEGORIES, Category, Provider } from "@/lib/types";
+import { Category, Provider } from "@/lib/types";
 import { timeAgo } from "@/lib/time";
 import { CategoryIcon } from "@/lib/categoryIcons";
-import { CATEGORY_COPY, countLabel } from "@/lib/categoryCopy";
+import { countLabel } from "@/lib/categories";
 import { useRequireAuth } from "@/lib/useActions";
 
 function greeting() {
@@ -39,7 +39,7 @@ function rankScore(p: Provider) {
 }
 
 export default function SearchHomePage() {
-  const { auth, providers, pendingFollowUp, resolveFollowUp, locationLabel } = useApp();
+  const { auth, providers, categories, pendingFollowUp, resolveFollowUp, locationLabel } = useApp();
   const router = useRouter();
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
@@ -59,7 +59,7 @@ export default function SearchHomePage() {
     return map;
   }, [providers]);
 
-  const heroes = CATEGORIES.filter((c) => counts.get(c)).sort((a, b) => counts.get(b)! - counts.get(a)!);
+  const heroes = categories.filter((c) => counts.get(c.name)).sort((a, b) => counts.get(b.name)! - counts.get(a.name)!);
   const topRated = useMemo(() => [...providers].sort((a, b) => rankScore(b) - rankScore(a)).slice(0, 8), [providers]);
   const latest = useMemo(
     () =>
@@ -105,10 +105,10 @@ export default function SearchHomePage() {
       </form>
 
       <div className="trades" style={{ marginTop: 14 }}>
-        {CATEGORIES.map((c) => (
-          <button key={c} type="button" className="trade" onClick={() => router.push(`/search/results?category=${encodeURIComponent(c)}`)}>
-            <CategoryIcon category={c} size={24} />
-            {CATEGORY_COPY[c].tab}
+        {categories.map((c) => (
+          <button key={c.name} type="button" className="trade" onClick={() => router.push(`/search/results?category=${encodeURIComponent(c.name)}`)}>
+            <CategoryIcon icon={c.icon} size={24} />
+            {c.tab}
           </button>
         ))}
       </div>
@@ -142,12 +142,12 @@ export default function SearchHomePage() {
         <>
           <div className="scroller" style={{ marginTop: 18 }}>
             {heroes.map((c) => (
-              <Link key={c} href={`/search/results?category=${encodeURIComponent(c)}`} className="hero">
-                <Cover category={c} />
-                <span className="hero-chip">{c}</span>
+              <Link key={c.name} href={`/search/results?category=${encodeURIComponent(c.name)}`} className="hero">
+                <Cover art={c.art} />
+                <span className="hero-chip">{c.name}</span>
                 <span className="hero-text">
-                  <b>{CATEGORY_COPY[c].hook}</b>
-                  <span>{`${countLabel(c, counts.get(c)!)} near ${place}`}</span>
+                  <b>{c.hook}</b>
+                  <span>{`${countLabel(c, counts.get(c.name)!)} near ${place}`}</span>
                 </span>
               </Link>
             ))}

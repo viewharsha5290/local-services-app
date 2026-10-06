@@ -209,26 +209,39 @@ html[data-theme="ruby"] {
   --art-star: #222222;
 }
 
-/* Lantern gives each trade its own world. */
-html[data-theme="lantern"] .cover-mechanic {
+/* Lantern gives each scene its own world ("lights" keeps the night palette set on :root). */
+html[data-theme="lantern"] .cover-garage {
   --art-sky: #ffe2cc; --art-ground: #e9b998; --art-shape: #2b2b33; --art-shape-2: #3d3d49;
   --art-light: #cfe9f5; --art-pop: #d9480f; --art-sun: #ff9a5a; --art-line: #2b2b33;
 }
-html[data-theme="lantern"] .cover-handyman {
+html[data-theme="lantern"] .cover-house {
   --art-sky: #cfebdd; --art-ground: #9ccbb4; --art-shape: #0b4a35; --art-shape-2: #1b6a4e;
   --art-light: #ffd45c; --art-pop: #d9480f; --art-sun: #fff3c4; --art-line: #0b4a35;
 }
-html[data-theme="lantern"] .cover-attorney {
+html[data-theme="lantern"] .cover-columns {
   --art-sky: #e4e0f5; --art-ground: #b9b2dc; --art-shape: #2e2a55; --art-shape-2: #4a4580;
   --art-light: #ffffff; --art-pop: #ffd45c; --art-sun: #ffb89a; --art-line: #2e2a55;
 }
-html[data-theme="lantern"] .cover-auditor {
+html[data-theme="lantern"] .cover-towers {
   --art-sky: #d6ecf7; --art-ground: #a9cfe3; --art-shape: #12384f; --art-shape-2: #1f5673;
   --art-light: #ffd45c; --art-pop: #d9480f; --art-sun: #fff3c4; --art-line: #12384f;
 }
-html[data-theme="lantern"] .cover-clergy {
+html[data-theme="lantern"] .cover-hall {
   --art-sky: #ffe9b8; --art-ground: #e8c988; --art-shape: #5a2408; --art-shape-2: #7a3a14;
   --art-light: #fff6d6; --art-pop: #d9480f; --art-sun: #ffffff; --art-line: #5a2408;
+}
+
+html[data-theme="lantern"] .cover-shop {
+  --art-sky: #fde7d3; --art-ground: #efc7a6; --art-shape: #3b2a4d; --art-shape-2: #5a4372;
+  --art-light: #fff3c4; --art-pop: #d9480f; --art-sun: #ffb37a; --art-line: #3b2a4d;
+}
+html[data-theme="lantern"] .cover-van {
+  --art-sky: #d9f0ea; --art-ground: #a8d5c8; --art-shape: #17171c; --art-shape-2: #2f4f5f;
+  --art-light: #fff3c4; --art-pop: #d9480f; --art-sun: #ffe08a; --art-line: #17171c;
+}
+html[data-theme="lantern"] .cover-garden {
+  --art-sky: #dff3c9; --art-ground: #a9d48a; --art-shape: #1f5a36; --art-shape-2: #3d7f4f;
+  --art-light: #ffd45c; --art-pop: #d9480f; --art-sun: #fff3c4; --art-line: #1f5a36;
 }
 
 /* — derived tokens (also the names older components use) — */
@@ -828,6 +841,42 @@ button.tag { cursor: pointer; }
   .listing-body { margin: 0; padding: 28px 0 8px; border-radius: 0; }
   .contactbar { margin: 28px 0 0; padding: 14px 0 18px; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Footer, legal notices and the plain pages (contact, terms, privacy)
+   ════════════════════════════════════════════════════════════════════════════ */
+.legal { font-size: 13px; line-height: 1.45; color: var(--color-muted); margin: 14px 0; }
+.legal a, .field .hint a, .prose a { color: var(--color-brand-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.footer { margin-top: 56px; padding: 24px 0 8px; border-top: 1px solid var(--color-line); font-size: 14px; color: var(--color-muted); }
+.footer .brand { font-size: 16px; }
+.footer p { margin: 10px 0 0; max-width: 62ch; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 14px 0 0; list-style: none; }
+.footer-links a { display: inline-flex; align-items: center; min-height: 40px; color: var(--color-text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.infopage { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 var(--gutter) 32px; }
+.infopage-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 72px; border-bottom: 1px solid var(--color-line); margin-bottom: 28px; }
+.infopage-head a.back { font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.prose h1 { font-size: 34px; margin: 0 0 6px; }
+.prose h2 { font-size: 21px; margin: 32px 0 8px; scroll-margin-top: 16px; }
+.prose p, .prose li { font-size: 15.5px; line-height: 1.6; }
+.prose ul { padding-left: 22px; margin: 0 0 12px; }
+.prose li { margin-bottom: 6px; }
+.prose .updated { color: var(--color-muted); font-size: 14px; }
+.prose .summary { padding: 16px 18px; border-radius: calc(var(--r-card) - 4px); background: var(--color-soft); margin: 18px 0 8px; }
+.prose .summary p:last-child, .prose .summary ul:last-child { margin-bottom: 0; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Admin lists
+   ════════════════════════════════════════════════════════════════════════════ */
+.pickgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px; }
+.pick { height: 52px; border: 1.5px solid var(--color-line); border-radius: 12px; background: var(--color-card); color: var(--color-text); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.pick[aria-pressed="true"] { border-color: var(--color-text); box-shadow: 0 0 0 2px var(--color-text); }
+.artgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.artpick { padding: 0; border: 1.5px solid var(--color-line); border-radius: 12px; background: var(--color-card); color: var(--color-text); cursor: pointer; overflow: hidden; font: inherit; font-size: 12.5px; text-align: left; }
+.artpick[aria-pressed="true"] { border-color: var(--color-text); box-shadow: 0 0 0 2px var(--color-text); }
+.artpick .cover { height: 70px; }
+.artpick span.l { display: block; padding: 6px 8px; }
+.adminrow { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-line); }
+.adminrow .ico { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--color-soft); display: flex; align-items: center; justify-content: center; }
 
 /* ════════════════════════════════════════════════════════════════════════════
    Edit listing
