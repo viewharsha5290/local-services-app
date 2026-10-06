@@ -63,7 +63,7 @@ export default function SignInPage() {
         <h2 style={{ margin: "8px 0 4px" }}>{mode === "signup" ? "Create your account" : "Welcome back"}</h2>
         <p style={{ fontSize: 13, opacity: 0.75, margin: "0 0 20px" }}>
           {mode === "signup"
-            ? "Browsing is open to everyone. An account ties reviews and recommendations to a real neighbor — that's what keeps them trustworthy."
+            ? "Browsing is open to everyone. An account ties reviews and recommendations to a real neighbour — that's what keeps them trustworthy."
             : "Enter the email you signed up with and we'll send you a sign-in link."}
         </p>
         {notice && <p style={{ fontSize: 12.5, margin: "0 0 12px", color: "var(--color-accent-700)" }}>{notice}</p>}

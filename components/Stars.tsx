@@ -14,7 +14,7 @@ export function Stars({ rating, size = 13 }: { rating: number; size?: number }) 
   );
 }
 
-/** Google's aggregate rating, always labelled as Google's so it never reads as the neighbor rating. */
+/** Google's aggregate rating, always labelled as Google's so it never reads as the neighbour rating. */
 export function GoogleRating({ provider }: { provider: Pick<Provider, "googleRating" | "googleRatingCount"> }) {
   if (provider.googleRating == null || !provider.googleRatingCount) return null;
   return (

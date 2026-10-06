@@ -364,3 +364,9 @@ revoke execute on function log_provider_contact(uuid, text) from public;
 grant execute on function log_provider_contact(uuid, text) to anon, authenticated;
 revoke execute on function my_listing_stats() from public, anon;
 grant execute on function my_listing_stats() to authenticated;
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Work photos: object paths in the public `provider-photos` storage bucket, cover first.
+-- (Same statement as migration_008_provider_photos.sql.)
+-- ════════════════════════════════════════════════════════════════════════════
+alter table public.providers add column if not exists photos text[] not null default '{}';

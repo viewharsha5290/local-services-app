@@ -1,53 +1,76 @@
 "use client";
 
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { BadgeCheck, Heart, ShieldCheck, Star } from "lucide-react";
 import { Provider } from "@/lib/types";
-import { GoogleRating, Stars } from "./Stars";
-import { CategoryIcon } from "@/lib/categoryIcons";
+import { useApp } from "@/lib/store";
+import { useRequireAuth } from "@/lib/useActions";
 import { formatLocationMeta } from "@/lib/format";
+import { ListingCover } from "./Cover";
+
+/** What to show as a listing's headline score. Neighbour reviews win when there are any; Google's
+ * aggregate is the fallback and is always worded as Google's, never as the neighbour rating. */
+export function scoreOf(p: Provider): { value: string; label: string; line: string } | null {
+  if (p.reviewCount > 0) {
+    const google = p.googleRating != null && p.googleRatingCount ? ` · ${p.googleRating.toFixed(1)} on Google` : "";
+    return {
+      value: p.rating.toFixed(1),
+      label: `${p.rating.toFixed(1)} from neighbours`,
+      line: `${p.reviewCount} neighbour ${p.reviewCount === 1 ? "review" : "reviews"}${google}`,
+    };
+  }
+  if (p.googleRating != null && p.googleRatingCount) {
+    return {
+      value: p.googleRating.toFixed(1),
+      label: `${p.googleRating.toFixed(1)} on Google`,
+      line: `${p.googleRatingCount.toLocaleString()} Google ${p.googleRatingCount === 1 ? "review" : "reviews"}`,
+    };
+  }
+  return null;
+}
 
 export function ProviderCard({ provider, showCategory = false }: { provider: Provider; showCategory?: boolean }) {
+  const { isSaved } = useApp();
+  const requireAuth = useRequireAuth();
+  const saved = isSaved(provider.id);
+  const score = scoreOf(provider);
+  const place = formatLocationMeta(provider);
+  const fallbackLine =
+    provider.recommendCount > 0
+      ? `Recommended by ${provider.recommendCount} ${provider.recommendCount === 1 ? "neighbour" : "neighbours"}`
+      : "New listing";
+
   return (
-    <Link href={`/provider/${provider.id}`} className="card" style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
-      <div
-        style={{
-          width: 42,
-          height: 42,
-          flex: "none",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--color-accent-100)",
-          color: "var(--color-accent-700)",
-          border: "1px solid var(--color-divider)",
-        }}
-      >
-        <CategoryIcon category={provider.category} size={19} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-          <div className="card-title">{provider.name}</div>
-          {provider.verified && (
-            <span className="tag tag-accent" style={{ display: "flex", alignItems: "center", gap: 3, flex: "none" }}>
-              <ShieldCheck size={11} /> Verified
+    <div className="pcard">
+      <Link href={`/provider/${provider.id}`} className="pcard-link">
+        <ListingCover provider={provider} className="pcard-cover" />
+        <div className="pcard-head">
+          <span className="pcard-name">{provider.name}</span>
+          {score && (
+            <span className="pcard-score" aria-label={score.label}>
+              <Star size={13} fill="currentColor" strokeWidth={0} />
+              {score.value}
             </span>
           )}
         </div>
-        <div className="card-meta">
-          {showCategory ? `${provider.category}${formatLocationMeta(provider) ? " · " : ""}` : ""}
-          {formatLocationMeta(provider)}
-        </div>
-        {provider.reviewCount > 0 ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-            <Stars rating={provider.rating} />
-            <span style={{ opacity: 0.7 }}>{provider.rating.toFixed(1)} · Tap to view</span>
-          </div>
-        ) : (
-          <div style={{ fontSize: 12, opacity: 0.7 }}>Recommended by {provider.recommendCount} neighbors</div>
-        )}
-        <GoogleRating provider={provider} />
-      </div>
-    </Link>
+        <div className="pcard-meta">{[showCategory ? provider.category : null, place].filter(Boolean).join(" · ") || provider.category}</div>
+        <div className="pcard-meta">{score?.line ?? fallbackLine}</div>
+      </Link>
+      {(provider.claimed || provider.verified) && (
+        <span className="pcard-badge">
+          {provider.claimed ? <BadgeCheck size={13} /> : <ShieldCheck size={13} />}
+          {provider.claimed ? "Claimed" : "Verified"}
+        </span>
+      )}
+      <button
+        type="button"
+        className={`pcard-save ${saved ? "on" : ""}`}
+        aria-label={saved ? `Remove ${provider.name} from saved` : `Save ${provider.name}`}
+        aria-pressed={saved}
+        onClick={() => requireAuth({ type: "save", providerId: provider.id })}
+      >
+        <Heart size={19} fill={saved ? "currentColor" : "none"} />
+      </button>
+    </div>
   );
 }

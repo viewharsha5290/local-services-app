@@ -55,6 +55,8 @@ export interface Provider {
   googleMapsUri?: string;
   /** The signed-up user who manages this listing, once an admin has approved their claim. */
   ownerId?: string;
+  /** Public URLs of the business's work photos, in display order; the first is the cover. */
+  photos: string[];
 }
 
 export type ContactMethod = "whatsapp" | "sms" | "call" | "chat";

@@ -11,11 +11,11 @@ const COPY: Record<string, { title: string; body: string }> = {
   },
   review: {
     title: "Sign in to post your review",
-    body: "Reviews here come from real neighbors, not anonymous accounts. Takes about 30 seconds — your draft is kept.",
+    body: "Reviews here come from real neighbours, not anonymous accounts. Takes about 30 seconds — your draft is kept.",
   },
   recommend: {
     title: "Sign in to recommend a provider",
-    body: "Recommendations are tied to a real neighbor — that's what keeps them trustworthy. Takes about 30 seconds.",
+    body: "Recommendations are tied to a real neighbour — that's what keeps them trustworthy. Takes about 30 seconds.",
   },
   claim: {
     title: "Sign in to claim this listing",

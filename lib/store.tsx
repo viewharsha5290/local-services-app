@@ -6,6 +6,11 @@ import { haversineKm } from "./distance";
 import { AuthState, ClaimStatus, ContactEvent, ContactMethod, GoogleReview, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
+
+/** providers.photos stores object paths in the public `provider-photos` bucket. */
+function photoUrl(path: string) {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/provider-photos/${path}`;
+}
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
 const FOLLOW_UP_DELAY_MS = 1000 * 60 * 60 * 48;
 
@@ -169,6 +174,7 @@ function mapProviderRow(row: any): Provider {
     googleRatingCount: row.google_rating_count ?? undefined,
     googleMapsUri: row.google_maps_uri ?? undefined,
     ownerId: row.owner_id ?? undefined,
+    photos: ((row.photos ?? []) as string[]).map(photoUrl),
   };
 }
 
