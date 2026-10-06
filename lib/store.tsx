@@ -27,7 +27,12 @@ interface ReviewInput {
   rating: number;
   tags: string[];
   text: string;
+  /** Show the review as "A neighbour" instead of under the author's name. */
+  anonymous?: boolean;
 }
+
+/** What stands in for the name on a review posted without one. */
+export const ANONYMOUS_AUTHOR = "A neighbour";
 
 interface ClaimInput {
   providerId: string;
@@ -143,8 +148,9 @@ function mapProviderRow(row: any): Provider {
     .map((r) => ({
       id: r.id,
       providerId: r.provider_id,
-      author: r.author_name,
+      author: r.author_name ?? ANONYMOUS_AUTHOR,
       authorId: r.author_id ?? undefined,
+      anonymous: Boolean(r.anonymous),
       rating: r.rating,
       tags: r.tags ?? [],
       text: r.text ?? "",
@@ -237,7 +243,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [myListings, setMyListings] = useState<ListingStats[]>([]);
 
   const fetchProviders = useCallback(async (cityFilter?: string | null) => {
-    let query = supabase.from("providers").select("*, reviews(*)").order("created_at", { ascending: true });
+    let query = supabase.from("providers").select("*, reviews:reviews_public(*)").order("created_at", { ascending: true });
     // Built by hand rather than `.contains("cities", [cityFilter])`: supabase-js serializes that
     // as an unquoted `{Toronto, ON}`, which Postgres parses as two elements and never matches.
     if (cityFilter) query = query.filter("cities", "cs", `{"${cityFilter.replace(/["\\]/g, "\\$&")}"}`);
@@ -522,12 +528,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // .select() so a row the database refused to touch shows up as "nothing changed", not success.
       const { data, error } = await supabase
         .from("reviews")
-        .update({ rating: input.rating, tags: input.tags, text: input.text })
+        .update({ rating: input.rating, tags: input.tags, text: input.text, anonymous: Boolean(input.anonymous) })
         .eq("id", reviewId)
         .eq("author_id", auth.id)
         .select("id");
       if (error || !data?.length) return { error: "Couldn't save your changes. Please try again." };
-      replaceReviews(input.providerId, (reviews) => reviews.map((r) => (r.id === reviewId ? { ...r, rating: input.rating, tags: input.tags, text: input.text } : r)));
+      replaceReviews(input.providerId, (reviews) => reviews.map((r) => (r.id === reviewId ? { ...r, rating: input.rating, tags: input.tags, text: input.text, anonymous: Boolean(input.anonymous), author: input.anonymous ? ANONYMOUS_AUTHOR : (auth.name ?? "Neighbour") } : r)));
       return {};
     },
     [auth, replaceReviews]
@@ -554,11 +560,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const authorName = auth.name ?? "Neighbor";
       const { data } = await supabase
         .from("reviews")
-        .insert({ provider_id: input.providerId, author_id: auth.id, author_name: authorName, rating: input.rating, tags: input.tags, text: input.text })
+        .insert({ provider_id: input.providerId, author_id: auth.id, author_name: authorName, rating: input.rating, tags: input.tags, text: input.text, anonymous: Boolean(input.anonymous) })
         .select()
         .single();
       if (!data) return;
-      const review: Review = { id: data.id, providerId: input.providerId, author: authorName, authorId: auth.id, rating: input.rating, tags: input.tags, text: input.text, date: data.created_at };
+      const review: Review = { id: data.id, providerId: input.providerId, author: input.anonymous ? ANONYMOUS_AUTHOR : authorName, authorId: auth.id, rating: input.rating, tags: input.tags, text: input.text, date: data.created_at, anonymous: Boolean(input.anonymous) };
       setProvidersBase((prev) =>
         prev.map((p) => {
           if (p.id !== input.providerId) return p;

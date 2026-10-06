@@ -376,3 +376,31 @@ grant execute on function my_listing_stats() to authenticated;
 -- (Same statement as migration_008_provider_photos.sql.)
 -- ════════════════════════════════════════════════════════════════════════════
 alter table public.providers add column if not exists photos text[] not null default '{}';
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Anonymous reviews: the table hides them from everyone but their author and admins; the
+-- public reads reviews_public, where their name and author_id are blanked.
+-- (Same statements as migration_010_anonymous_reviews.sql; replaces the public-read policy above.)
+-- ════════════════════════════════════════════════════════════════════════════
+alter table public.reviews add column if not exists anonymous boolean not null default false;
+
+drop policy if exists "reviews: public read" on reviews;
+create policy "reviews: public read" on reviews for select
+  using (not anonymous or author_id = auth.uid() or is_admin());
+
+-- Runs with its owner's rights (not security_invoker), which is what lets it list rows the
+-- policy above hides, minus the identifying columns.
+create or replace view public.reviews_public as
+select
+  r.id,
+  r.provider_id,
+  r.rating,
+  r.tags,
+  r.text,
+  r.created_at,
+  r.anonymous,
+  case when r.anonymous and r.author_id is distinct from auth.uid() then null else r.author_id end as author_id,
+  case when r.anonymous then null else r.author_name end as author_name
+from public.reviews r;
+
+grant select on public.reviews_public to anon, authenticated;

@@ -501,6 +501,9 @@ button { font-family: inherit; }
 .input::placeholder { color: var(--color-muted); opacity: 0.8; }
 .input:focus-visible { border-color: var(--color-text); outline: none; box-shadow: 0 0 0 3px var(--color-accent-200); }
 textarea.input { min-height: 100px; resize: vertical; }
+.checkrow { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; font-size: 15px; }
+.checkrow input { width: 22px; height: 22px; flex: none; margin-top: 1px; accent-color: var(--color-brand); cursor: pointer; }
+.checkrow .sub { display: block; font-size: 13.5px; color: var(--color-muted); }
 .seg { display: inline-flex; overflow: hidden; width: 100%; border: var(--input-border); border-radius: var(--r-btn); }
 .seg-opt {
   flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px;

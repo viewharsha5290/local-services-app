@@ -171,7 +171,7 @@ export default function SearchHomePage() {
               <div className="feed">
                 {latest.map(({ review, provider }) => (
                   <Link key={review.id} href={`/provider/${provider.id}`} className="feed-item">
-                    <span className="avatar" style={{ width: 44, height: 44, fontSize: 15 }}>{initialsOf(review.author)}</span>
+                    <span className="avatar" style={{ width: 44, height: 44, fontSize: 15 }}>{review.anonymous ? <User size={19} /> : initialsOf(review.author)}</span>
                     <span style={{ minWidth: 0 }}>
                       <b>{review.author}</b> reviewed <b>{provider.name}</b>
                       <span className="sub">{`${review.text ? `${review.text} · ` : ""}${timeAgo(new Date(review.date).getTime())}`}</span>

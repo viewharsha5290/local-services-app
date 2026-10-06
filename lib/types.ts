@@ -12,6 +12,9 @@ export interface Review {
   text: string;
   date: string;
   mine?: boolean;
+  /** Posted without the author's name. `author` is then a stand-in, and `authorId` is only set
+   * when the signed-in user wrote it. */
+  anonymous?: boolean;
 }
 
 /** A review imported from Google Maps — deliberately a separate type from `Review` so it can

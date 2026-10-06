@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2 } from "lucide-react";
+import { BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2, User } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { ListingCover } from "@/components/Cover";
 import { PhotoViewer } from "@/components/PhotoViewer";
@@ -222,7 +222,7 @@ export default function ProviderDetailPage() {
               <div>
                 {provider.reviews.map((r) => (
                   <div key={r.id} className="review">
-                    <span className="avatar" style={{ width: 40, height: 40, fontSize: 14 }}>{initialsOf(r.author)}</span>
+                    <span className="avatar" style={{ width: 40, height: 40, fontSize: 14 }}>{r.anonymous ? <User size={18} /> : initialsOf(r.author)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
                         <span className="who">{r.author}</span>
@@ -230,6 +230,9 @@ export default function ProviderDetailPage() {
                       </div>
                       <Stars rating={r.rating} size={13} />
                       <div className="body">{r.text}</div>
+                      {Boolean(auth.id) && r.authorId === auth.id && r.anonymous && (
+                        <div className="eyebrow" style={{ marginTop: 6 }}>Yours, posted without your name</div>
+                      )}
                       {Boolean(auth.id) && r.authorId === auth.id && (
                         <div className="review-actions">
                           <button type="button" onClick={() => open(<WriteReviewSheet provider={provider} review={r} />)}>

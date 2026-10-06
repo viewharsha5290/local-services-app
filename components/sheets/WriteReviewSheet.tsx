@@ -15,6 +15,7 @@ export function WriteReviewSheet({ provider, review }: { provider: Provider; rev
   const [rating, setRating] = useState(review?.rating ?? 5);
   const [tags, setTags] = useState<string[]>(review?.tags ?? []);
   const [text, setText] = useState(review?.text ?? "");
+  const [anonymous, setAnonymous] = useState(review?.anonymous ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,13 +25,13 @@ export function WriteReviewSheet({ provider, review }: { provider: Provider; rev
 
   async function submit() {
     if (!review) {
-      addReview({ providerId: provider.id, rating, tags, text: text.trim() });
+      addReview({ providerId: provider.id, rating, tags, text: text.trim(), anonymous });
       close();
       return;
     }
     setSaving(true);
     setError(null);
-    const result = await updateReview(review.id, { providerId: provider.id, rating, tags, text: text.trim() });
+    const result = await updateReview(review.id, { providerId: provider.id, rating, tags, text: text.trim(), anonymous });
     setSaving(false);
     if (result.error) setError(result.error);
     else close();
@@ -68,6 +69,13 @@ export function WriteReviewSheet({ provider, review }: { provider: Provider; rev
         />
         {error && <span style={{ fontSize: 13, color: "var(--color-danger)" }}>{error}</span>}
       </div>
+      <label className="checkrow" style={{ marginBottom: 20 }}>
+        <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
+        <span>
+          <b>Post without my name</b>
+          <span className="sub">Shows as &ldquo;A neighbour&rdquo;. It stays tied to your account, so you can still edit or delete it.</span>
+        </span>
+      </label>
       <button type="button" className="btn btn-primary btn-block" onClick={submit} disabled={saving}>
         {review ? (saving ? "Saving…" : "Save changes") : "Post review"}
       </button>
