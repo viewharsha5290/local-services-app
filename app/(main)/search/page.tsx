@@ -108,7 +108,7 @@ export default function SearchHomePage() {
         {categories.map((c) => (
           <button key={c.name} type="button" className="trade" onClick={() => router.push(`/search/results?category=${encodeURIComponent(c.name)}`)}>
             <CategoryIcon icon={c.icon} size={24} />
-            {c.tab}
+            {c.name}
           </button>
         ))}
       </div>

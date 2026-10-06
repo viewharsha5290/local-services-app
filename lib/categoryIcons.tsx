@@ -1,8 +1,10 @@
 import { createElement } from "react";
 import {
   Baby,
+  Bone,
   Briefcase,
   Bug,
+  CakeSlice,
   Calculator,
   Camera,
   Car,
@@ -61,7 +63,9 @@ export const ICON_OPTIONS: { key: string; label: string; Icon: LucideIcon }[] = 
   { key: "scissors", label: "Scissors", Icon: Scissors },
   { key: "shirt", label: "Clothing", Icon: Shirt },
   { key: "utensils", label: "Food", Icon: Utensils },
+  { key: "cake", label: "Cake", Icon: CakeSlice },
   { key: "stethoscope", label: "Health", Icon: Stethoscope },
+  { key: "bone", label: "Bones and joints", Icon: Bone },
   { key: "graduation-cap", label: "Teaching", Icon: GraduationCap },
   { key: "baby", label: "Childcare", Icon: Baby },
   { key: "paw", label: "Pets", Icon: PawPrint },

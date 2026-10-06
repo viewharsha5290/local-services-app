@@ -217,11 +217,13 @@ function mapProviderRow(row: any): Provider {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapCategoryRow(row: any): CategoryInfo {
-  return { name: row.name, tab: row.tab_label, one: row.one, many: row.many, hook: row.hook, icon: row.icon, art: row.art, sortOrder: row.sort_order };
+  return { name: row.name, one: row.one, many: row.many, hook: row.hook, icon: row.icon, art: row.art, sortOrder: row.sort_order };
 }
 
+/** `tab_label` used to be a separate short label. The name is the label now; the column is kept
+ * filled (it's capped at 16 characters) so the table's rules still hold. */
 function categoryRow(c: CategoryInfo) {
-  return { name: c.name.trim(), tab_label: c.tab.trim(), one: c.one.trim(), many: c.many.trim(), hook: c.hook.trim(), icon: c.icon, art: c.art, sort_order: c.sortOrder };
+  return { name: c.name.trim(), tab_label: c.name.trim().slice(0, 16), one: c.one.trim(), many: c.many.trim(), hook: c.hook.trim(), icon: c.icon, art: c.art, sort_order: c.sortOrder };
 }
 
 /** Postgres error codes worth explaining to the admin editing categories. */

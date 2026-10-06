@@ -3,12 +3,12 @@ import { CategoryInfo } from "./types";
 /** The trades the site launched with. The live list comes from the `categories` table (see
  * lib/store.tsx); these stand in until it has loaded, or if it can't be reached. */
 export const DEFAULT_CATEGORIES: CategoryInfo[] = [
-  { name: "Handyman", tab: "Home fixes", one: "handyman", many: "handymen", hook: "That fix you keep putting off?", icon: "hammer", art: "house", sortOrder: 10 },
-  { name: "Mechanic", tab: "Cars", one: "mechanic", many: "mechanics", hook: "Car making that noise?", icon: "wrench", art: "garage", sortOrder: 20 },
-  { name: "Attorney", tab: "Legal", one: "attorney", many: "attorneys", hook: "Need it in writing?", icon: "scale", art: "columns", sortOrder: 30 },
-  { name: "Auditor", tab: "Money", one: "auditor", many: "auditors", hook: "Books need a second look?", icon: "calculator", art: "towers", sortOrder: 40 },
-  { name: "Clergy", tab: "Faith", one: "priest", many: "priests and clergy", hook: "Planning a ceremony?", icon: "church", art: "hall", sortOrder: 50 },
-  { name: "Electrician", tab: "Electric", one: "electrician", many: "electricians", hook: "Lights flickering?", icon: "zap", art: "lights", sortOrder: 60 },
+  { name: "Handyman", one: "handyman", many: "handymen", hook: "That fix you keep putting off?", icon: "hammer", art: "house", sortOrder: 10 },
+  { name: "Mechanic", one: "mechanic", many: "mechanics", hook: "Car making that noise?", icon: "wrench", art: "garage", sortOrder: 20 },
+  { name: "Attorney", one: "attorney", many: "attorneys", hook: "Need it in writing?", icon: "scale", art: "columns", sortOrder: 30 },
+  { name: "Auditor", one: "auditor", many: "auditors", hook: "Books need a second look?", icon: "calculator", art: "towers", sortOrder: 40 },
+  { name: "Priest", one: "priest", many: "priests", hook: "Planning a ceremony?", icon: "church", art: "hall", sortOrder: 50 },
+  { name: "Electrician", one: "electrician", many: "electricians", hook: "Lights flickering?", icon: "zap", art: "lights", sortOrder: 60 },
 ];
 
 /** A listing whose trade isn't in the list (renamed a moment ago, say) still gets sensible words. */
@@ -16,7 +16,6 @@ export function findCategory(categories: CategoryInfo[], name: string): Category
   return (
     categories.find((c) => c.name === name) ?? {
       name,
-      tab: name,
       one: name.toLowerCase(),
       many: name.toLowerCase(),
       hook: `Looking for ${name.toLowerCase()}?`,

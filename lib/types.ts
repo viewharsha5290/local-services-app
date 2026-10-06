@@ -4,8 +4,6 @@ export type Category = string;
 /** One trade: its name plus the wording, icon and cover illustration the site uses for it. */
 export interface CategoryInfo {
   name: Category;
-  /** Short label for the row of trades on the home page, e.g. "Home fixes". */
-  tab: string;
   /** How to count them: "1 electrician", "21 electricians". */
   one: string;
   many: string;

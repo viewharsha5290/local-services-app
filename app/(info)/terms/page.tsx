@@ -40,14 +40,17 @@ export default function TermsPage() {
       <h2 id="no-vetting">2. We don&rsquo;t vet or guarantee businesses</h2>
       <p>
         A listing is not a recommendation by us. We do not confirm that a business is licensed, insured, bonded, qualified or in good standing, and we
-        do not check its work. Before hiring anyone, check their licence where one is required (for example electricians, lawyers and accountants),
+        do not check its work. Before hiring anyone, check their licence or registration where one is required (for example electricians, lawyers, accountants and health practitioners),
         their insurance, and their references.
       </p>
       <p>
         A &ldquo;Claimed&rdquo; label means someone who told us they represent the business has taken over its listing after we contacted the business.
         It says nothing about the quality of their work. Ratings and reviews are other people&rsquo;s opinions, not ours.
       </p>
-      <p>Nothing on the site is legal, financial, tax, electrical, mechanical or other professional advice.</p>
+      <p>
+        Nothing on the site is medical, legal, financial, tax, electrical, mechanical or other professional advice. A listing for a health
+        practitioner is not a referral, and the site is not for emergencies.
+      </p>
 
       <h2 id="accounts">3. Accounts</h2>
       <ul>

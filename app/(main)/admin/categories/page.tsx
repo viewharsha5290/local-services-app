@@ -9,7 +9,7 @@ import { CategoryInfo } from "@/lib/types";
 import { ART_OPTIONS } from "@/lib/categories";
 import { CategoryIcon, ICON_OPTIONS } from "@/lib/categoryIcons";
 
-const BLANK: CategoryInfo = { name: "", tab: "", one: "", many: "", hook: "", icon: "briefcase", art: "shop", sortOrder: 100 };
+const BLANK: CategoryInfo = { name: "", one: "", many: "", hook: "", icon: "briefcase", art: "shop", sortOrder: 100 };
 
 /** Where an admin adds, edits and removes the trades listings are filed under. Hiding this page
  * from non-admins is only a courtesy — the database refuses their writes (migration 012). */
@@ -66,7 +66,7 @@ export default function AdminCategoriesPage() {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: "var(--font-strong-weight)" }}>{c.name}</div>
-                  <div className="text-muted" style={{ fontSize: 13.5 }}>{`“${c.tab}” · ${counts.get(c.name) ?? 0} listed here`}</div>
+                  <div className="text-muted" style={{ fontSize: 13.5 }}>{`${counts.get(c.name) ?? 0} listed here`}</div>
                 </div>
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditing({ original: c.name, draft: c })} aria-label={`Edit ${c.name}`}>
                   <Pencil size={15} /> Edit
@@ -99,7 +99,6 @@ function CategoryEditor({ original, initial, onDone }: { original?: string; init
   async function save() {
     const missing = [
       [draft.name, "a name"],
-      [draft.tab, "a short label"],
       [draft.one, "the word for one of them"],
       [draft.many, "the word for several"],
       [draft.hook, "a question"],
@@ -119,12 +118,7 @@ function CategoryEditor({ original, initial, onDone }: { original?: string; init
       <div className="field">
         <label htmlFor="cat-name">Name</label>
         <input id="cat-name" className="input" maxLength={30} placeholder="e.g. Plumber" value={draft.name} onChange={(e) => set("name", e.target.value)} />
-        <span className="hint">{original ? "Renaming also renames it on every listing filed under it." : "Shown on listings and in the category list."}</span>
-      </div>
-      <div className="field">
-        <label htmlFor="cat-tab">Short label</label>
-        <input id="cat-tab" className="input" maxLength={16} placeholder="e.g. Plumbing" value={draft.tab} onChange={(e) => set("tab", e.target.value)} />
-        <span className="hint">One or two words for the row of trades on the home page.</span>
+        <span className="hint">{original ? "Renaming also renames it on every listing filed under it." : "Shown on the home page, on listings and in the category list."}</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 18 }}>
         <div className="field">
