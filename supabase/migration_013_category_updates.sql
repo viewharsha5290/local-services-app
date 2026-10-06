@@ -18,3 +18,6 @@ update public.categories set tab_label = left(name, 16) where tab_label <> left(
 
 -- Later the same day: "Priest" also labelled the places of worship in that category, so it was widened.
 update public.categories set name = 'Priests & Temples', tab_label = 'Priests & Temple', one = 'priest or temple', many = 'priests and temples' where name = 'Priest';
+
+-- Renovations, split out from Handyman (small repairs) for bigger jobs; Deo Renovations was moved into it.
+insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Renovations', 'Renovations', 'renovation contractor', 'renovation contractors', 'Kitchen or bathroom due a redo?', 'hard-hat', 'house', 15) on conflict (name) do nothing;
