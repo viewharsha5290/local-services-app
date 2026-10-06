@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2, User } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
+import { AppLoading } from "@/components/AppLoading";
 import { ListingCover } from "@/components/Cover";
 import { PhotoViewer } from "@/components/PhotoViewer";
 import { GoogleRating, Stars } from "@/components/Stars";
@@ -31,11 +33,12 @@ function cityNames(cities: string[]) {
 export default function ProviderDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { auth, getProvider, isSaved, logContact, myClaims, myListings, refreshMyListings } = useApp();
+  const { auth, getProvider, refreshProvider, isSaved, logContact, myClaims, myListings, refreshMyListings } = useApp();
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
   const [shared, setShared] = useState(false);
   const [viewingPhoto, setViewingPhoto] = useState<number | null>(null);
+  const [lookedUp, setLookedUp] = useState(false);
 
   const provider = getProvider(params.id);
   const isOwner = Boolean(auth.id) && provider?.ownerId === auth.id;
@@ -44,6 +47,19 @@ export default function ProviderDetailPage() {
   useEffect(() => {
     if (isOwner) refreshMyListings();
   }, [isOwner, refreshMyListings]);
+
+  // Only the listings for the city being browsed are loaded up front. A shared link, or an owner
+  // opening their own listing from elsewhere, lands on one that isn't among them — fetch it.
+  useEffect(() => {
+    if (provider) return;
+    let active = true;
+    refreshProvider(params.id).then(() => active && setLookedUp(true));
+    return () => {
+      active = false;
+    };
+  }, [provider, params.id, refreshProvider]);
+
+  if (!provider && !lookedUp) return <AppLoading />;
 
   if (!provider) {
     return (
@@ -114,6 +130,12 @@ export default function ProviderDetailPage() {
               <ShieldCheck size={13} /> Verified
             </span>
           </div>
+        )}
+
+        {(isOwner || auth.isAdmin) && (
+          <Link href={`/provider/${provider.id}/edit`} className="btn btn-secondary btn-block" style={{ marginTop: 16 }}>
+            <Pencil size={16} /> {isOwner ? "Edit your listing" : "Edit listing (admin)"}
+          </Link>
         )}
 
         <div className="statstrip">

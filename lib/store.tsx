@@ -3,14 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
+import { PHOTO_BUCKET, photoPath, photoUrl, prepareImage } from "./photos";
 import { AuthState, ClaimStatus, ContactEvent, ContactMethod, GoogleReview, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
-
-/** providers.photos stores object paths in the public `provider-photos` bucket. */
-function photoUrl(path: string) {
-  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/provider-photos/${path}`;
-}
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
 const FOLLOW_UP_DELAY_MS = 1000 * 60 * 60 * 48;
 
@@ -29,6 +25,19 @@ interface ReviewInput {
   text: string;
   /** Show the review as "A neighbour" instead of under the author's name. */
   anonymous?: boolean;
+}
+
+export interface ListingInput {
+  bio: string;
+  phone: string;
+  areaNote: string;
+  cities: string[];
+  respondsWithin: string | null;
+}
+
+/** The listing functions raise messages written for the person editing; anything else is ours. */
+function listingError(message: string | undefined, fallback: string) {
+  return message && /^(Enter|The |Choose|Invalid|Not authorized|A listing|Sign in|Duplicate|Unknown)/.test(message) ? `${message}.`.replace(/\.\.$/, ".") : fallback;
 }
 
 /** What stands in for the name on a review posted without one. */
@@ -115,6 +124,13 @@ interface AppContextValue {
   setPendingAction: (action: PendingAction) => void;
   consumePendingAction: () => PendingAction;
   getProvider: (id: string) => Provider | undefined;
+  /** Re-reads one listing from the database (adding it if it isn't in the current city's list). */
+  refreshProvider: (id: string) => Promise<void>;
+  /** Editing a listing: only its manager or an admin gets past the database (migration 011). */
+  updateListing: (id: string, input: ListingInput) => Promise<{ error?: string }>;
+  addListingPhotos: (id: string, files: File[]) => Promise<{ error?: string }>;
+  /** Sets the listing's photos to exactly these URLs, in this order; any left out are deleted. */
+  saveListingPhotos: (id: string, urls: string[]) => Promise<{ error?: string }>;
   /** Loaded per provider page rather than with the list — ~5 per provider adds up fast. */
   fetchGoogleReviews: (providerId: string) => Promise<GoogleReview[]>;
   /** The signed-in user's own claims, keyed by provider id. */
@@ -250,6 +266,68 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await query;
     if (!error && data) setProvidersBase(data.map(mapProviderRow));
   }, []);
+
+  const refreshProvider = useCallback(async (id: string) => {
+    const { data } = await supabase.from("providers").select("*, reviews:reviews_public(*)").eq("id", id).maybeSingle();
+    if (!data) return;
+    const fresh = mapProviderRow(data);
+    setProvidersBase((prev) => (prev.some((p) => p.id === id) ? prev.map((p) => (p.id === id ? fresh : p)) : [...prev, fresh]));
+  }, []);
+
+  const updateListing = useCallback(
+    async (id: string, input: ListingInput) => {
+      const { error } = await supabase.rpc("update_my_listing", {
+        p_provider_id: id,
+        p_bio: input.bio,
+        p_phone: input.phone,
+        p_area_note: input.areaNote,
+        p_cities: input.cities,
+        p_responds_within: input.respondsWithin,
+      });
+      if (error) return { error: listingError(error.message, "Couldn't save your changes. Please try again.") };
+      await refreshProvider(id);
+      return {};
+    },
+    [refreshProvider]
+  );
+
+  const saveListingPhotos = useCallback(
+    async (id: string, urls: string[]) => {
+      const paths = urls.map(photoPath);
+      const { data: before } = await supabase.from("providers").select("photos").eq("id", id).maybeSingle();
+      const { error } = await supabase.rpc("set_my_listing_photos", { p_provider_id: id, p_photos: paths });
+      if (error) return { error: listingError(error.message, "Couldn't update your photos. Please try again.") };
+      const dropped = ((before?.photos ?? []) as string[]).filter((p) => !paths.includes(p));
+      if (dropped.length) await supabase.storage.from(PHOTO_BUCKET).remove(dropped);
+      await refreshProvider(id);
+      return {};
+    },
+    [refreshProvider]
+  );
+
+  const addListingPhotos = useCallback(
+    async (id: string, files: File[]) => {
+      const uploaded: string[] = [];
+      try {
+        for (const file of files) {
+          const path = `${id}/${crypto.randomUUID()}.jpg`;
+          const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, await prepareImage(file), { contentType: "image/jpeg", cacheControl: "31536000" });
+          if (error) throw new Error(error.message);
+          uploaded.push(path);
+        }
+        const { data: before } = await supabase.from("providers").select("photos").eq("id", id).maybeSingle();
+        const { error } = await supabase.rpc("set_my_listing_photos", { p_provider_id: id, p_photos: [...((before?.photos ?? []) as string[]), ...uploaded] });
+        if (error) throw new Error(error.message);
+      } catch (e) {
+        // don't leave files behind that no listing points at
+        if (uploaded.length) await supabase.storage.from(PHOTO_BUCKET).remove(uploaded);
+        return { error: listingError(e instanceof Error ? e.message : undefined, "Couldn't add those photos. Use JPEG, PNG or WebP files and try again.") };
+      }
+      await refreshProvider(id);
+      return {};
+    },
+    [refreshProvider]
+  );
 
   const fetchSaved = useCallback(async (userId: string) => {
     const { data } = await supabase.from("saved_providers").select("provider_id").eq("user_id", userId);
@@ -704,6 +782,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPendingAction,
     consumePendingAction,
     getProvider,
+    refreshProvider,
+    updateListing,
+    addListingPhotos,
+    saveListingPhotos,
     fetchGoogleReviews,
     myClaims,
     submitClaim,
