@@ -31,7 +31,7 @@ const CATEGORY_QUERIES = {
   Attorney: { text: "lawyer", type: "lawyer" },
   Auditor: { text: "accountant CPA", type: "accounting" },
   // No includedType: Places (New) has only per-faith types (church, mosque, synagogue, hindu_temple).
-  Priest: { text: "place of worship" },
+  "Priests & Temples": { text: "place of worship" },
   Electrician: { text: "electrician", type: "electrician" },
 };
 

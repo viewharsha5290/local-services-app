@@ -7,7 +7,7 @@ export const DEFAULT_CATEGORIES: CategoryInfo[] = [
   { name: "Mechanic", one: "mechanic", many: "mechanics", hook: "Car making that noise?", icon: "wrench", art: "garage", sortOrder: 20 },
   { name: "Attorney", one: "attorney", many: "attorneys", hook: "Need it in writing?", icon: "scale", art: "columns", sortOrder: 30 },
   { name: "Auditor", one: "auditor", many: "auditors", hook: "Books need a second look?", icon: "calculator", art: "towers", sortOrder: 40 },
-  { name: "Priest", one: "priest", many: "priests", hook: "Planning a ceremony?", icon: "church", art: "hall", sortOrder: 50 },
+  { name: "Priests & Temples", one: "priest or temple", many: "priests and temples", hook: "Planning a ceremony?", icon: "church", art: "hall", sortOrder: 50 },
   { name: "Electrician", one: "electrician", many: "electricians", hook: "Lights flickering?", icon: "zap", art: "lights", sortOrder: 60 },
 ];
 

@@ -15,3 +15,6 @@ insert into public.categories (name, tab_label, one, many, hook, icon, art, sort
 on conflict (name) do nothing;
 
 update public.categories set tab_label = left(name, 16) where tab_label <> left(name, 16);
+
+-- Later the same day: "Priest" also labelled the places of worship in that category, so it was widened.
+update public.categories set name = 'Priests & Temples', tab_label = 'Priests & Temple', one = 'priest or temple', many = 'priests and temples' where name = 'Priest';

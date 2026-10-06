@@ -59,7 +59,9 @@ export default function SearchHomePage() {
     return map;
   }, [providers]);
 
-  const heroes = categories.filter((c) => counts.get(c.name)).sort((a, b) => counts.get(b.name)! - counts.get(a.name)!);
+  // A trade with nobody listed near here is left off the page: tapping it would lead nowhere.
+  const listed = categories.filter((c) => counts.get(c.name));
+  const heroes = [...listed].sort((a, b) => counts.get(b.name)! - counts.get(a.name)!);
   const topRated = useMemo(() => [...providers].sort((a, b) => rankScore(b) - rankScore(a)).slice(0, 8), [providers]);
   const latest = useMemo(
     () =>
@@ -105,7 +107,7 @@ export default function SearchHomePage() {
       </form>
 
       <div className="trades" style={{ marginTop: 14 }}>
-        {categories.map((c) => (
+        {listed.map((c) => (
           <button key={c.name} type="button" className="trade" onClick={() => router.push(`/search/results?category=${encodeURIComponent(c.name)}`)}>
             <CategoryIcon icon={c.icon} size={24} />
             {c.name}
