@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Heart, MapPin, MessageSquare, Phone, Share2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { ListingCover } from "@/components/Cover";
+import { PhotoViewer } from "@/components/PhotoViewer";
 import { GoogleRating, Stars } from "@/components/Stars";
 import { ClaimStatus, GoogleReview, ListingStats, Provider } from "@/lib/types";
 import { useApp } from "@/lib/store";
 import { useRequireAuth } from "@/lib/useActions";
 import { useSheet } from "@/components/SheetProvider";
 import { ContactSheet } from "@/components/sheets/ContactSheet";
+import { DeleteReviewSheet, WriteReviewSheet } from "@/components/sheets/WriteReviewSheet";
 import { timeAgo } from "@/lib/time";
 
 function initialsOf(name: string) {
@@ -33,6 +35,7 @@ export default function ProviderDetailPage() {
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
   const [shared, setShared] = useState(false);
+  const [viewingPhoto, setViewingPhoto] = useState<number | null>(null);
 
   const provider = getProvider(params.id);
   const isOwner = Boolean(auth.id) && provider?.ownerId === auth.id;
@@ -197,7 +200,8 @@ export default function ProviderDetailPage() {
         {provider.photos.length > 0 && (
           <div className="listing-section">
             <h2>Their work</h2>
-            <WorkPhotos name={provider.name} photos={provider.photos} onOpen={(i) => open(<PhotoViewer name={provider.name} photos={provider.photos} start={i} />)} />
+            <WorkPhotos name={provider.name} photos={provider.photos} onOpen={setViewingPhoto} />
+            {viewingPhoto !== null && <PhotoViewer name={provider.name} photos={provider.photos} start={viewingPhoto} onClose={() => setViewingPhoto(null)} />}
           </div>
         )}
 
@@ -226,6 +230,16 @@ export default function ProviderDetailPage() {
                       </div>
                       <Stars rating={r.rating} size={13} />
                       <div className="body">{r.text}</div>
+                      {Boolean(auth.id) && r.authorId === auth.id && (
+                        <div className="review-actions">
+                          <button type="button" onClick={() => open(<WriteReviewSheet provider={provider} review={r} />)}>
+                            <Pencil size={14} /> Edit
+                          </button>
+                          <button type="button" onClick={() => open(<DeleteReviewSheet provider={provider} review={r} />)}>
+                            <Trash2 size={14} /> Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -279,26 +293,6 @@ function WorkPhotos({ name, photos, onOpen }: { name: string; photos: string[]; 
         </button>
       ))}
     </div>
-  );
-}
-
-/** Every photo, full width, in a sheet that opens scrolled to the one that was tapped. */
-function PhotoViewer({ name, photos, start }: { name: string; photos: string[]; start: number }) {
-  return (
-    <>
-      <h3 style={{ marginBottom: 12 }}>{`${name}: their work`}</h3>
-      <div className="photostack">
-        {photos.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element -- served from Supabase storage
-          <img
-            key={src}
-            src={src}
-            alt={`${name} work photo ${i + 1} of ${photos.length}`}
-            ref={i === start && start > 0 ? (el) => el?.scrollIntoView({ block: "start" }) : undefined}
-          />
-        ))}
-      </div>
-    </>
   );
 }
 

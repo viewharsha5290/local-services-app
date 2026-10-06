@@ -100,6 +100,9 @@ interface AppContextValue {
   toggleSaved: (providerId: string) => void;
   isSaved: (providerId: string) => boolean;
   addReview: (input: ReviewInput) => void;
+  /** Edit or delete one of the signed-in user's own reviews (the database refuses anyone else's). */
+  updateReview: (reviewId: string, input: ReviewInput) => Promise<{ error?: string }>;
+  deleteReview: (reviewId: string, providerId: string) => Promise<{ error?: string }>;
   addRecommendation: (input: RecommendInput) => Promise<string>;
   logContact: (providerId: string, providerName: string, method: ContactMethod) => void;
   resolveFollowUp: (eventId: string, action: "hired" | "not-hired" | "snooze", rating?: number) => void;
@@ -500,6 +503,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const isSaved = useCallback((providerId: string) => savedIds.includes(providerId), [savedIds]);
 
+  /** Swap a provider's review list and re-derive its rating from what's left. */
+  const replaceReviews = useCallback((providerId: string, change: (reviews: Review[]) => Review[]) => {
+    setProvidersBase((prev) =>
+      prev.map((p) => {
+        if (p.id !== providerId) return p;
+        const reviews = change(p.reviews);
+        const reviewCount = reviews.length;
+        const rating = reviewCount ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount) * 10) / 10 : 0;
+        return { ...p, reviews, reviewCount, rating };
+      })
+    );
+  }, []);
+
+  const updateReview = useCallback(
+    async (reviewId: string, input: ReviewInput) => {
+      if (auth.status !== "signedIn" || !auth.id) return { error: "Sign in to edit your review." };
+      // .select() so a row the database refused to touch shows up as "nothing changed", not success.
+      const { data, error } = await supabase
+        .from("reviews")
+        .update({ rating: input.rating, tags: input.tags, text: input.text })
+        .eq("id", reviewId)
+        .eq("author_id", auth.id)
+        .select("id");
+      if (error || !data?.length) return { error: "Couldn't save your changes. Please try again." };
+      replaceReviews(input.providerId, (reviews) => reviews.map((r) => (r.id === reviewId ? { ...r, rating: input.rating, tags: input.tags, text: input.text } : r)));
+      return {};
+    },
+    [auth, replaceReviews]
+  );
+
+  const deleteReview = useCallback(
+    async (reviewId: string, providerId: string) => {
+      if (auth.status !== "signedIn" || !auth.id) return { error: "Sign in to delete your review." };
+      const { data, error } = await supabase.from("reviews").delete().eq("id", reviewId).eq("author_id", auth.id).select("id");
+      if (error || !data?.length) return { error: "Couldn't delete your review. Please try again." };
+      replaceReviews(providerId, (reviews) => reviews.filter((r) => r.id !== reviewId));
+      setTrustStats((s) => {
+        const reviews = Math.max(0, s.reviews - 1);
+        return { ...s, reviews, neighborsHelped: Math.max(0, s.neighborsHelped - 1), isTrusted: reviews + s.recommendations >= 3 };
+      });
+      return {};
+    },
+    [auth, replaceReviews]
+  );
+
   const addReview = useCallback(
     async (input: ReviewInput) => {
       if (auth.status !== "signedIn" || !auth.id) return;
@@ -641,6 +689,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     toggleSaved,
     isSaved,
     addReview,
+    updateReview,
+    deleteReview,
     addRecommendation,
     logContact,
     resolveFollowUp,

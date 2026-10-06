@@ -151,6 +151,12 @@ create policy "providers: authenticated insert" on providers for insert
 create policy "reviews: public read" on reviews for select using (true);
 create policy "reviews: authenticated insert" on reviews for insert
   with check (auth.uid() is not null and author_id = auth.uid());
+-- ...and edit or delete only their own (migration_009_review_edit_delete.sql).
+create policy "reviews: author update" on reviews for update
+  using (author_id = auth.uid())
+  with check (author_id = auth.uid());
+create policy "reviews: author delete" on reviews for delete
+  using (author_id = auth.uid());
 
 -- google_reviews: readable by everyone; no client writes (the import script uses the service role).
 create policy "google_reviews: public read" on google_reviews for select using (true);

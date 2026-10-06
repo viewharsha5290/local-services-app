@@ -779,13 +779,33 @@ button.tag { cursor: pointer; }
 .workgrid.n2 button { grid-row: 1 / 3; }
 .workgrid img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .workgrid .more { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.55); color: #fff; font-weight: var(--font-strong-weight); font-size: 15px; }
-.photostack { display: flex; flex-direction: column; gap: 10px; }
-.photostack img { width: 100%; height: auto; display: block; border-radius: 14px; background: var(--color-soft); }
+/* photo viewer: always dark, whatever the theme, so the photos are what you see */
+.lightbox { position: fixed; inset: 0; z-index: 120; display: flex; flex-direction: column; background: rgba(10, 10, 12, 0.96); color: #fff; animation: fadeIn 0.18s var(--ease); }
+.lightbox-bar { display: flex; align-items: center; justify-content: space-between; flex: none; padding: 12px 14px 8px 20px; font-size: 15px; font-weight: 600; }
+.lightbox-track { flex: 1; min-height: 0; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior: contain; }
+.lightbox-track::-webkit-scrollbar { display: none; }
+.lightbox-slide { flex: none; width: 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; padding: 4px 12px 20px; }
+.lightbox-slide img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; display: block; }
+.lightbox-btn { width: 48px; height: 48px; flex: none; border-radius: 50%; border: 0; cursor: pointer; background: rgba(255, 255, 255, 0.16); color: #fff; display: flex; align-items: center; justify-content: center; }
+.lightbox-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.28); }
+.lightbox-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.lightbox-btn:disabled { opacity: 0.3; cursor: default; }
+.lightbox-prev, .lightbox-next { position: absolute; top: 50%; margin-top: -24px; background: rgba(20, 20, 24, 0.72); }
+.lightbox-prev { left: 10px; }
+.lightbox-next { right: 10px; }
+@media (min-width: 768px) {
+  .lightbox-slide { padding: 8px 84px 32px; }
+  .lightbox-prev { left: 20px; }
+  .lightbox-next { right: 20px; }
+}
 .review { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--color-line); }
 .review:last-child { border-bottom: 0; }
 .review .who { font-size: 14.5px; font-weight: var(--font-strong-weight); color: var(--color-text); }
 .review .when { font-size: 12.5px; color: var(--color-muted); flex: none; }
 .review .body { margin-top: 4px; font-size: 14.5px; color: var(--color-text); }
+.review-actions { display: flex; gap: 6px; margin: 6px 0 0 -10px; }
+.review-actions button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 10px; border: 0; border-radius: var(--r-chip); background: none; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--color-muted); }
+.review-actions button:hover { background: var(--color-soft); color: var(--color-text); }
 .contactbar {
   position: sticky; bottom: 0; z-index: 25;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
