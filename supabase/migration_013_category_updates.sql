@@ -33,3 +33,6 @@ insert into public.categories (name, tab_label, one, many, hook, icon, art, sort
 
 -- 2026-10-11: category for the first handmade gifts and decor maker.
 insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Gifts & Decor', 'Gifts & Decor', 'gift and decor maker', 'gift and decor makers', 'Decorating for a celebration?', 'flower', 'shop', 99) on conflict (name) do nothing;
+
+-- 2026-10-11: category for the first flower and pooja supplier.
+insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Flowers & Pooja Items', 'Flowers & Pooja', 'flower and pooja supplier', 'flower and pooja suppliers', 'Fresh flowers for the pooja?', 'flower', 'garden', 55) on conflict (name) do nothing;
