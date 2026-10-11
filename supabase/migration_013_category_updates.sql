@@ -30,3 +30,6 @@ insert into public.categories (name, tab_label, one, many, hook, icon, art, sort
 
 -- 2026-10-11: category for the first driving school.
 insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Driving Schools', 'Driving Schools', 'driving school', 'driving schools', 'Road test coming up?', 'car', 'garage', 98) on conflict (name) do nothing;
+
+-- 2026-10-11: category for the first handmade gifts and decor maker.
+insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Gifts & Decor', 'Gifts & Decor', 'gift and decor maker', 'gift and decor makers', 'Decorating for a celebration?', 'flower', 'shop', 99) on conflict (name) do nothing;

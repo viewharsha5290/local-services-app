@@ -323,16 +323,25 @@ export default function ProviderDetailPage() {
       <div className="contactbar">
         <div style={{ minWidth: 0 }}>
           <div className="t">Free to contact</div>
-          <div className="s">{provider.phoneDisplay}</div>
+          <div className="s">{provider.phone ? provider.phoneDisplay : site ? `Through ${site.instagram ? "Instagram" : "their website"}` : "No phone number on file"}</div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" className="btn btn-secondary btn-icon" style={{ width: 54, height: 54 }} aria-label={`Message ${provider.name}`} onClick={() => open(<ContactSheet provider={provider} />)}>
-            <MessageSquare size={20} />
-          </button>
-          <button type="button" className="btn btn-cta" onClick={callNow}>
-            <Phone size={18} /> Call
-          </button>
-        </div>
+        {provider.phone ? (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" className="btn btn-secondary btn-icon" style={{ width: 54, height: 54 }} aria-label={`Message ${provider.name}`} onClick={() => open(<ContactSheet provider={provider} />)}>
+              <MessageSquare size={20} />
+            </button>
+            <button type="button" className="btn btn-cta" onClick={callNow}>
+              <Phone size={18} /> Call
+            </button>
+          </div>
+        ) : (
+          // Some businesses take orders only through a profile or site; there is nothing to dial.
+          site && (
+            <a href={site.href} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-cta">
+              {site.instagram ? "Open Instagram" : "Visit website"} <ExternalLink size={16} />
+            </a>
+          )
+        )}
       </div>
     </div>
   );
