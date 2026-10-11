@@ -7,6 +7,7 @@ import { ChevronDown, Palette, Search, SearchX, User } from "lucide-react";
 import { ProviderCard } from "@/components/ProviderCard";
 import { Cover, artKey } from "@/components/Cover";
 import { PostCard } from "@/components/PostCard";
+import { Carousel } from "@/components/Carousel";
 import { StarPicker } from "@/components/Stars";
 import { ThemeSheet } from "@/components/ThemePicker";
 import { useSheet } from "@/components/SheetProvider";
@@ -217,7 +218,7 @@ export default function SearchHomePage() {
         </div>
       ) : (
         <>
-          <div className="scroller" style={{ marginTop: 18 }}>
+          <Carousel label="Trades near you">
             {heroes.map((c) => (
               <Link key={c.name} href={`/search/results?category=${encodeURIComponent(c.name)}`} className={`hero cover-${artKey(c.art)}`}>
                 <Cover art={c.art} layout="side" />
@@ -228,7 +229,7 @@ export default function SearchHomePage() {
                 </span>
               </Link>
             ))}
-          </div>
+          </Carousel>
 
           {newThisWeek.length > 0 && (
             <>

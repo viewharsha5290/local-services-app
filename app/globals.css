@@ -767,6 +767,27 @@ button.tag { cursor: pointer; }
 
 .hero { position: relative; display: block; width: min(86vw, 520px); height: 230px; border-radius: calc(var(--r-card) + 4px); overflow: hidden; background: var(--art-sky); color: var(--art-ink); text-decoration: none; border: var(--card-border); }
 .hero .cover { position: absolute; inset: 0; }
+.carousel { position: relative; margin-top: 18px; }
+.carousel-track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; border-radius: calc(var(--r-card) + 4px); }
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-track > * { flex: none; width: 100%; scroll-snap-align: start; }
+.carousel-arrow {
+  position: absolute; top: 115px; transform: translateY(-50%); z-index: 2; display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--color-card); color: var(--color-text); box-shadow: 0 1px 6px rgba(0, 0, 0, 0.22);
+}
+.carousel-arrow.prev { left: 8px; }
+.carousel-arrow.next { right: 8px; }
+.carousel-dots { display: flex; justify-content: center; margin-top: 8px; }
+.carousel-dots button { width: 18px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.carousel-dots button::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--color-line); transition: width 0.2s var(--ease), background-color 0.2s var(--ease); }
+.carousel-dots button.on::before { width: 16px; border-radius: 4px; background: var(--color-text); }
+@media (min-width: 768px) {
+  .carousel-track > * { width: calc((100% - 14px) / 2); }
+  .carousel-arrow.prev { left: -14px; }
+  .carousel-arrow.next { right: -14px; }
+}
+@media (hover: none) { .carousel-arrow { display: none; } }
 .hero-chip { position: absolute; left: 16px; top: 16px; z-index: 1; padding: 6px 12px; border-radius: var(--r-chip); background: var(--color-card); color: var(--color-text); font-size: 12px; font-weight: var(--font-strong-weight); }
 .hero-text { position: absolute; left: 18px; right: 46%; bottom: 18px; z-index: 1; }
 .hero-text b { display: block; font-family: var(--font-heading); font-weight: var(--font-heading-weight); letter-spacing: var(--heading-tracking); font-size: 24px; line-height: 1.1; }
