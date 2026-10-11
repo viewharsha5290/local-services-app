@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Palette, Search, SearchX, User } from "lucide-react";
 import { ProviderCard } from "@/components/ProviderCard";
-import { Cover } from "@/components/Cover";
+import { Cover, artKey } from "@/components/Cover";
 import { PostCard } from "@/components/PostCard";
 import { StarPicker } from "@/components/Stars";
 import { ThemeSheet } from "@/components/ThemePicker";
@@ -219,8 +219,8 @@ export default function SearchHomePage() {
         <>
           <div className="scroller" style={{ marginTop: 18 }}>
             {heroes.map((c) => (
-              <Link key={c.name} href={`/search/results?category=${encodeURIComponent(c.name)}`} className="hero">
-                <Cover art={c.art} />
+              <Link key={c.name} href={`/search/results?category=${encodeURIComponent(c.name)}`} className={`hero cover-${artKey(c.art)}`}>
+                <Cover art={c.art} layout="side" />
                 <span className="hero-chip">{c.name}</span>
                 <span className="hero-text">
                   <b>{c.hook}</b>

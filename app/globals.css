@@ -54,6 +54,8 @@
   --art-sun: #ffe9a8;
   --art-line: #ffd45c;
   --art-star: #ffffff;
+  --art-ink: #ffffff;
+  --art-edge: #ffffff;
 }
 
 html[data-theme="paper"] {
@@ -96,6 +98,7 @@ html[data-theme="paper"] {
   --art-sun: #fffdf8;
   --art-line: #b8472a;
   --art-star: #18241e;
+  --art-ink: #18241e;
 }
 
 html[data-theme="evergreen"] {
@@ -132,6 +135,7 @@ html[data-theme="evergreen"] {
   --art-sun: #ffd9a0;
   --art-line: #e2553b;
   --art-star: #ffffff;
+  --art-ink: #0e5a4a;
 }
 
 html[data-theme="midnight"] {
@@ -172,6 +176,8 @@ html[data-theme="midnight"] {
   --art-sun: #a9c0b3;
   --art-line: #c8f169;
   --art-star: #f1f6f2;
+  --art-ink: #f1f6f2;
+  --art-edge: #f1f6f2;
 }
 
 html[data-theme="ruby"] {
@@ -207,41 +213,54 @@ html[data-theme="ruby"] {
   --art-sun: #ffc9cf;
   --art-line: #d4142a;
   --art-star: #222222;
+  --art-ink: #222222;
 }
 
-/* Lantern gives each scene its own world ("lights" keeps the night palette set on :root). */
-html[data-theme="lantern"] .cover-garage {
-  --art-sky: #ffe2cc; --art-ground: #e9b998; --art-shape: #2b2b33; --art-shape-2: #3d3d49;
-  --art-light: #cfe9f5; --art-pop: #d9480f; --art-sun: #ff9a5a; --art-line: #2b2b33;
+/* Lantern gives each object its own world (the light bulb keeps the night palette set on :root). */
+html[data-theme="lantern"] .cover-car,
+html[data-theme="lantern"] .cover-lplate,
+html[data-theme="lantern"] .cover-roller {
+  --art-sky: #ffe2cc; --art-ground: #e9b998; --art-shape: #2b2b33; --art-shape-2: #55556a;
+  --art-light: #cfe9f5; --art-pop: #d9480f; --art-sun: #ffb347; --art-line: #2b2b33; --art-ink: #2b2b33;
 }
-html[data-theme="lantern"] .cover-house {
+html[data-theme="lantern"] .cover-toolbox,
+html[data-theme="lantern"] .cover-housekey {
   --art-sky: #cfebdd; --art-ground: #9ccbb4; --art-shape: #0b4a35; --art-shape-2: #1b6a4e;
-  --art-light: #ffd45c; --art-pop: #d9480f; --art-sun: #fff3c4; --art-line: #0b4a35;
+  --art-light: #fff3c4; --art-pop: #d9480f; --art-sun: #ffd45c; --art-line: #0b4a35; --art-ink: #0b4a35;
 }
-html[data-theme="lantern"] .cover-columns {
-  --art-sky: #e4e0f5; --art-ground: #b9b2dc; --art-shape: #2e2a55; --art-shape-2: #4a4580;
-  --art-light: #ffffff; --art-pop: #ffd45c; --art-sun: #ffb89a; --art-line: #2e2a55;
+html[data-theme="lantern"] .cover-scales,
+html[data-theme="lantern"] .cover-knee {
+  --art-sky: #e4e0f5; --art-ground: #b9b2dc; --art-shape: #2e2a55; --art-shape-2: #6a63ad;
+  --art-light: #ffffff; --art-pop: #ff8a5c; --art-sun: #ffd45c; --art-line: #2e2a55; --art-ink: #2e2a55;
 }
-html[data-theme="lantern"] .cover-towers {
-  --art-sky: #d6ecf7; --art-ground: #a9cfe3; --art-shape: #12384f; --art-shape-2: #1f5673;
-  --art-light: #ffd45c; --art-pop: #d9480f; --art-sun: #fff3c4; --art-line: #12384f;
+html[data-theme="lantern"] .cover-calculator,
+html[data-theme="lantern"] .cover-tap {
+  --art-sky: #d6ecf7; --art-ground: #a9cfe3; --art-shape: #12384f; --art-shape-2: #2f7399;
+  --art-light: #eaf6fc; --art-pop: #d9480f; --art-sun: #ffd45c; --art-line: #12384f; --art-ink: #12384f;
 }
-html[data-theme="lantern"] .cover-hall {
-  --art-sky: #ffe9b8; --art-ground: #e8c988; --art-shape: #5a2408; --art-shape-2: #7a3a14;
-  --art-light: #fff6d6; --art-pop: #d9480f; --art-sun: #ffffff; --art-line: #5a2408;
+html[data-theme="lantern"] .cover-diya,
+html[data-theme="lantern"] .cover-book {
+  --art-sky: #ffe9b8; --art-ground: #e8c988; --art-shape: #5a2408; --art-shape-2: #9a4a1a;
+  --art-light: #fff6d6; --art-pop: #d9480f; --art-sun: #ffc234; --art-line: #5a2408; --art-ink: #5a2408;
 }
-
-html[data-theme="lantern"] .cover-shop {
-  --art-sky: #fde7d3; --art-ground: #efc7a6; --art-shape: #3b2a4d; --art-shape-2: #5a4372;
-  --art-light: #fff3c4; --art-pop: #d9480f; --art-sun: #ffb37a; --art-line: #3b2a4d;
+html[data-theme="lantern"] .cover-cake,
+html[data-theme="lantern"] .cover-henna,
+html[data-theme="lantern"] .cover-saree {
+  --art-sky: #fde3ea; --art-ground: #f4c0d1; --art-shape: #4b1528; --art-shape-2: #993556;
+  --art-light: #fff6e5; --art-pop: #d4537e; --art-sun: #ffd45c; --art-line: #4b1528; --art-ink: #4b1528;
 }
-html[data-theme="lantern"] .cover-van {
-  --art-sky: #d9f0ea; --art-ground: #a8d5c8; --art-shape: #17171c; --art-shape-2: #2f4f5f;
-  --art-light: #fff3c4; --art-pop: #d9480f; --art-sun: #ffe08a; --art-line: #17171c;
+html[data-theme="lantern"] .cover-sewing,
+html[data-theme="lantern"] .cover-toran {
+  --art-sky: #fde7d3; --art-ground: #efc7a6; --art-shape: #3b2a4d; --art-shape-2: #7a5c99;
+  --art-light: #fff3c4; --art-pop: #d9480f; --art-sun: #ffc234; --art-line: #3b2a4d; --art-ink: #3b2a4d;
 }
-html[data-theme="lantern"] .cover-garden {
+html[data-theme="lantern"] .cover-tent {
+  --art-sky: #d9f0ea; --art-ground: #a8d5c8; --art-shape: #17171c; --art-shape-2: #2f6f7f;
+  --art-light: #fff3c4; --art-pop: #d9480f; --art-sun: #ffd45c; --art-line: #17171c; --art-ink: #17171c;
+}
+html[data-theme="lantern"] .cover-garland {
   --art-sky: #dff3c9; --art-ground: #a9d48a; --art-shape: #1f5a36; --art-shape-2: #3d7f4f;
-  --art-light: #ffd45c; --art-pop: #d9480f; --art-sun: #fff3c4; --art-line: #1f5a36;
+  --art-light: #fff3c4; --art-pop: #e8590c; --art-sun: #ffc234; --art-line: #1f5a36; --art-ink: #1f5a36;
 }
 
 /* — derived tokens (also the names older components use) — */
@@ -639,7 +658,6 @@ button.tag { cursor: pointer; }
 .cover { display: block; position: relative; overflow: hidden; background: var(--art-sky); }
 .cover > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .cover > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.cover.flip > svg { transform: scaleX(-1); }
 .cover .a-sky { fill: var(--art-sky); }
 .cover .a-ground { fill: var(--art-ground); }
 .cover .a-shape { fill: var(--art-shape); }
@@ -650,8 +668,13 @@ button.tag { cursor: pointer; }
 .cover .a-star { fill: var(--art-star); }
 .cover .a-line { fill: none; stroke: var(--art-line); stroke-width: 2; }
 .cover .a-rail { fill: none; stroke: var(--art-pop); stroke-width: 5; stroke-linecap: round; }
-.cover .a-tint { fill: var(--art-shape-2); opacity: 0; }
-.cover.tint .a-tint { opacity: 0.22; }
+.cover .a-cut { fill: var(--art-edge); }
+.cover .a-stroke { fill: none; stroke: var(--art-shape); stroke-linecap: round; stroke-linejoin: round; }
+.cover .a-ray { stroke: var(--art-sun); }
+.cover .a-page { stroke: var(--art-light); }
+/* the sticker's edge: every shape again in one colour, with a fat outline */
+.cover .a-edge * { fill: var(--art-edge); stroke: var(--art-edge); stroke-width: 11; stroke-linejoin: round; stroke-linecap: round; }
+.cover .a-edge .a-stroke { fill: none; stroke-width: 15; }
 
 /* ════════════════════════════════════════════════════════════════════════════
    Listing card
@@ -742,13 +765,12 @@ button.tag { cursor: pointer; }
 }
 .trade:hover { color: var(--color-text); border-bottom-color: var(--color-line); }
 
-.hero { position: relative; display: block; width: min(86vw, 520px); height: 230px; border-radius: calc(var(--r-card) + 4px); overflow: hidden; color: #fff; text-decoration: none; border: var(--card-border); }
+.hero { position: relative; display: block; width: min(86vw, 520px); height: 230px; border-radius: calc(var(--r-card) + 4px); overflow: hidden; background: var(--art-sky); color: var(--art-ink); text-decoration: none; border: var(--card-border); }
 .hero .cover { position: absolute; inset: 0; }
-.hero::after { content: ""; position: absolute; inset: 40% 0 0; background: linear-gradient(transparent, rgba(0, 0, 0, 0.62)); }
 .hero-chip { position: absolute; left: 16px; top: 16px; z-index: 1; padding: 6px 12px; border-radius: var(--r-chip); background: var(--color-card); color: var(--color-text); font-size: 12px; font-weight: var(--font-strong-weight); }
-.hero-text { position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 1; }
+.hero-text { position: absolute; left: 18px; right: 46%; bottom: 18px; z-index: 1; }
 .hero-text b { display: block; font-family: var(--font-heading); font-weight: var(--font-heading-weight); letter-spacing: var(--heading-tracking); font-size: 24px; line-height: 1.1; }
-.hero-text span { display: block; font-size: 14px; margin-top: 4px; }
+.hero-text span { display: block; font-size: 14px; margin-top: 6px; opacity: 0.82; }
 
 .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 28px 0 10px; }
 .section-head h2 { margin: 0; font-size: 21px; }

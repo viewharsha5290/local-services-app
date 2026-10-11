@@ -5,22 +5,61 @@ import { useApp } from "@/lib/store";
 import { findCategory } from "@/lib/categories";
 import { coverStyle } from "@/lib/photos";
 
-/** An illustrated scene standing in for photos a listing doesn't have. Each trade picks one
- * (categories.art); pass `art` to draw a specific scene instead. Colours come from the --art-*
- * tokens in globals.css, so each theme (and, in the default theme, each scene) paints the same
- * drawing differently. `seed` varies listings of one trade a little. */
-export function Cover({ category, art, seed = "", className = "" }: { category?: Category; art?: string; seed?: string; className?: string }) {
+/** The names categories used for their cover art before each trade had its own drawing. */
+const OLD_KEYS: Record<string, string> = {
+  lights: "bulb",
+  garage: "car",
+  house: "toolbox",
+  columns: "scales",
+  towers: "calculator",
+  hall: "diya",
+  shop: "saree",
+  van: "tent",
+  garden: "garland",
+};
+
+/** The drawing a categories.art value stands for; anything unknown gets the clothes hanger. */
+export function artKey(art: string) {
+  const key = OLD_KEYS[art] ?? art;
+  return key in OBJECTS ? key : "saree";
+}
+
+/** An illustration standing in for photos a listing doesn't have: one object for the trade, cut
+ * out like a sticker, with a little confetti. Each trade picks its object (categories.art); pass
+ * `art` to draw a specific one. Colours come from the --art-* tokens in globals.css, so each theme
+ * (and, in the default theme, each object) paints the same drawing differently. `seed` varies
+ * listings of one trade a little. `layout="side"` keeps the object to the right of a wide card,
+ * leaving the left for words. */
+export function Cover({
+  category,
+  art,
+  seed = "",
+  className = "",
+  layout = "center",
+}: {
+  category?: Category;
+  art?: string;
+  seed?: string;
+  className?: string;
+  layout?: "center" | "side";
+}) {
   const { categories } = useApp();
-  const wanted = art ?? (category ? findCategory(categories, category).art : "shop");
-  const key = wanted in SCENES ? wanted : "shop";
+  const key = artKey(art ?? (category ? findCategory(categories, category).art : "saree"));
   const v = hash(seed);
-  const classes = ["cover", `cover-${key}`, v & 1 ? "flip" : "", v & 2 ? "tint" : "", className].filter(Boolean).join(" ");
+  const side = layout === "side";
+  const object = OBJECTS[key];
   return (
-    <span className={classes} aria-hidden="true">
-      <svg viewBox="0 0 350 230" preserveAspectRatio="xMidYMid slice">
-        <rect className="a-sky" width="350" height="230" />
-        {SCENES[key]}
-        <rect className="a-tint" width="350" height="230" />
+    <span className={["cover", `cover-${key}`, className].filter(Boolean).join(" ")} aria-hidden="true">
+      <svg viewBox={side ? "0 0 520 230" : "0 0 350 230"} preserveAspectRatio={side ? "xMaxYMid slice" : "xMidYMid slice"}>
+        <rect className="a-sky" width="520" height="230" />
+        <g transform={side ? "translate(352 32) scale(1.15)" : "translate(98 38) scale(1.1)"}>
+          {CONFETTI[v % CONFETTI.length]}
+          <g transform={`rotate(${v & 1 ? 6 : -8} 70 70)`}>
+            {/* the same shapes again, fattened and painted one colour, make the sticker's edge */}
+            <g className="a-edge">{object}</g>
+            {object}
+          </g>
+        </g>
       </svg>
     </span>
   );
@@ -43,174 +82,322 @@ function hash(s: string) {
   return h;
 }
 
-/** Keyed by categories.art; the choices offered to an admin are ART_OPTIONS in lib/categories.ts. */
-const SCENES: Record<string, React.ReactNode> = {
-  // Houses at night under a string of lights.
-  lights: (
+/** Scattered around the object, in the same 140-unit box it is drawn in. */
+const CONFETTI: React.ReactNode[] = [
+  <>
+    <rect className="a-sun" x="-22" y="112" width="15" height="15" rx="3" transform="rotate(20 -14 120)" />
+    <circle className="a-pop" cx="152" cy="16" r="8" />
+    <path className="a-shape" d="M-10 22l11 5-8 9z" />
+    <path className="a-sun" d="M144 98l14 4-10 11z" />
+  </>,
+  <>
+    <circle className="a-sun" cx="-14" cy="28" r="9" />
+    <rect className="a-pop" x="146" y="100" width="14" height="14" rx="3" transform="rotate(-18 153 107)" />
+    <path className="a-shape" d="M150 24l12 2-7 11z" />
+    <path className="a-pop" d="M-18 104l13-3-4 13z" />
+  </>,
+  <>
+    <path className="a-pop" d="M-16 18l14 3-9 11z" />
+    <circle className="a-shape" cx="156" cy="62" r="6" />
+    <rect className="a-sun" x="140" y="118" width="13" height="13" rx="3" transform="rotate(30 146 124)" />
+    <circle className="a-sun" cx="-12" cy="96" r="7" />
+  </>,
+];
+
+const car = (
+  <>
+    <path className="a-pop" d="M12 112V94q0-9 9-9h10l15-24h48l17 24h10q9 0 9 9v18z" />
+    <path className="a-light" d="M40 84l10-17h36l12 17z" />
+    <rect className="a-pop" x="66" y="67" width="4" height="17" />
+    <circle className="a-shape" cx="40" cy="114" r="14" />
+    <circle className="a-light" cx="40" cy="114" r="5" />
+    <circle className="a-shape" cx="102" cy="114" r="14" />
+    <circle className="a-light" cx="102" cy="114" r="5" />
+  </>
+);
+
+/** Keyed by categories.art; the choices offered to an admin are ART_OPTIONS in lib/categories.ts.
+ * Each is drawn inside a 140 by 140 box. */
+const OBJECTS: Record<string, React.ReactNode> = {
+  // Attorney: scales of justice.
+  scales: (
     <>
-      <circle className="a-sun" cx="292" cy="46" r="24" />
-      <circle className="a-star" cx="60" cy="30" r="2" />
-      <circle className="a-star" cx="130" cy="52" r="1.5" />
-      <circle className="a-star" cx="200" cy="24" r="2" />
-      <path className="a-line" d="M0 60 Q90 100 175 62 T350 66" />
-      <circle className="a-light" cx="45" cy="78" r="5" />
-      <circle className="a-pop" cx="100" cy="84" r="5" />
-      <circle className="a-light" cx="160" cy="68" r="5" />
-      <circle className="a-pop" cx="225" cy="60" r="5" />
-      <circle className="a-light" cx="300" cy="64" r="5" />
-      <rect className="a-ground" y="170" width="350" height="60" />
-      <rect className="a-shape" x="24" y="118" width="74" height="70" />
-      <path className="a-shape" d="M16 120l45-30 45 30z" />
-      <rect className="a-light" x="38" y="134" width="18" height="18" />
-      <rect className="a-light" x="66" y="134" width="18" height="18" />
-      <rect className="a-pop" x="52" y="162" width="16" height="26" />
-      <rect className="a-shape" x="128" y="98" width="88" height="90" />
-      <path className="a-shape" d="M120 100l52-36 52 36z" />
-      <rect className="a-light" x="142" y="114" width="20" height="20" />
-      <rect className="a-shape2" x="182" y="114" width="20" height="20" />
-      <rect className="a-shape2" x="142" y="146" width="20" height="20" />
-      <rect className="a-light" x="182" y="146" width="20" height="20" />
-      <rect className="a-shape" x="246" y="128" width="80" height="60" />
-      <path className="a-shape" d="M238 130l48-28 48 28z" />
-      <rect className="a-light" x="260" y="142" width="18" height="18" />
-      <rect className="a-light" x="294" y="142" width="18" height="18" />
+      <rect className="a-shape" x="46" y="118" width="48" height="9" rx="4.5" />
+      <rect className="a-shape" x="67" y="30" width="6" height="92" />
+      <rect className="a-shape" x="18" y="36" width="104" height="6" rx="3" />
+      <path className="a-stroke" strokeWidth="3" d="M28 42L13 82M28 42L43 82M112 42L97 82M112 42L127 82" />
+      <path className="a-pop" d="M7 82h42a21 21 0 0 1-42 0z" />
+      <path className="a-pop" d="M91 82h42a21 21 0 0 1-42 0z" />
+      <circle className="a-sun" cx="70" cy="33" r="9" />
     </>
   ),
-  // A car outside a roller-door garage.
-  garage: (
+  // Mechanic: a car with a wrench over it.
+  car: (
     <>
-      <circle className="a-sun" cx="62" cy="50" r="26" />
-      <rect className="a-ground" y="182" width="350" height="48" />
-      <rect className="a-shape" x="140" y="58" width="210" height="124" />
-      <rect className="a-shape2" x="156" y="78" width="194" height="14" />
-      <rect className="a-shape2" x="156" y="104" width="194" height="14" />
-      <rect className="a-shape2" x="156" y="130" width="194" height="14" />
-      <path className="a-pop" d="M40 182v-28q0-10 10-10h22l20-28h76l22 28h18q10 0 10 10v28z" />
-      <path className="a-light" d="M98 142l15-20h52l16 20z" />
-      <circle className="a-shape" cx="86" cy="184" r="19" />
-      <circle className="a-light" cx="86" cy="184" r="6" />
-      <circle className="a-shape" cx="188" cy="184" r="19" />
-      <circle className="a-light" cx="188" cy="184" r="6" />
+      <g transform="rotate(38 98 34)">
+        <rect className="a-shape" x="93" y="30" width="10" height="44" rx="5" />
+        <circle className="a-shape" cx="98" cy="24" r="14" />
+        <rect className="a-cut" x="93" y="6" width="10" height="18" />
+      </g>
+      {car}
     </>
   ),
-  // A house mid-repair: ladder against the wall, toolbox on the lawn.
-  house: (
+  // Driving schools: a learner's car.
+  lplate: (
     <>
-      <circle className="a-sun" cx="60" cy="48" r="24" />
-      <rect className="a-ground" y="178" width="350" height="52" />
-      <rect className="a-shape" x="122" y="96" width="150" height="92" />
-      <path className="a-shape" d="M106 98l91-54 91 54z" />
-      <rect className="a-light" x="138" y="114" width="26" height="26" />
-      <rect className="a-light" x="230" y="114" width="26" height="26" />
-      <rect className="a-pop" x="182" y="138" width="30" height="50" />
-      <path className="a-rail" d="M64 190L104 78M90 190L130 78" />
-      <path className="a-rail" d="M72 166h26M80 142h26M88 118h26M96 96h26" />
-      <rect className="a-pop" x="288" y="164" width="46" height="26" rx="3" />
-      <path className="a-line" d="M300 164v-8h22v8" />
+      <rect className="a-sun" x="52" y="14" width="36" height="38" rx="6" />
+      <path className="a-shape" d="M62 22h8v18h10v7H62z" />
+      <rect className="a-shape" x="67" y="50" width="6" height="12" />
+      {car}
     </>
   ),
-  // A courthouse front: steps, columns, pediment.
-  columns: (
+  // Auditor: a calculator in front of a ledger.
+  calculator: (
     <>
-      <circle className="a-sun" cx="292" cy="50" r="24" />
-      <rect className="a-ground" y="186" width="350" height="44" />
-      <rect className="a-shape2" x="62" y="172" width="226" height="16" />
-      <rect className="a-shape" x="80" y="92" width="190" height="82" />
-      <path className="a-shape" d="M66 94l109-52 109 52z" />
-      <circle className="a-pop" cx="175" cy="74" r="8" />
-      {[98, 134, 168, 202, 238].map((x) => (
-        <rect key={x} className="a-light" x={x} y="104" width="14" height="68" />
-      ))}
+      <g transform="rotate(10 90 60)">
+        <rect className="a-shape2" x="56" y="14" width="68" height="90" rx="7" />
+        <rect className="a-light" x="68" y="30" width="44" height="5" rx="2.5" />
+        <rect className="a-light" x="68" y="44" width="44" height="5" rx="2.5" />
+        <rect className="a-light" x="68" y="58" width="30" height="5" rx="2.5" />
+      </g>
+      <rect className="a-shape" x="14" y="34" width="74" height="98" rx="11" />
+      <rect className="a-light" x="24" y="44" width="54" height="20" rx="5" />
+      {[74, 92, 110].map((y) =>
+        [24, 44, 64].map((x) => <rect key={`${x}-${y}`} className={x === 64 ? "a-sun" : "a-pop"} x={x} y={y} width="14" height="12" rx="3" />)
+      )}
     </>
   ),
-  // Office towers and a rising bar chart.
-  towers: (
+  // Mortgages: a house and its key.
+  housekey: (
     <>
-      <circle className="a-sun" cx="58" cy="46" r="22" />
-      <rect className="a-ground" y="186" width="350" height="44" />
-      <rect className="a-shape" x="36" y="92" width="72" height="98" />
-      <rect className="a-shape2" x="122" y="58" width="86" height="132" />
-      <rect className="a-shape" x="222" y="106" width="62" height="84" />
-      {[0, 1, 2].map((r) => [0, 1, 2].map((c) => <rect key={`a${r}${c}`} className="a-light" x={46 + c * 20} y={104 + r * 26} width="12" height="14" />))}
-      {[0, 1, 2, 3].map((r) => [0, 1, 2].map((c) => <rect key={`b${r}${c}`} className="a-light" x={134 + c * 24} y={72 + r * 28} width="14" height="16" />))}
-      {[0, 1].map((r) => [0, 1].map((c) => <rect key={`c${r}${c}`} className="a-light" x={234 + c * 24} y={120 + r * 28} width="14" height="16" />))}
-      <rect className="a-pop" x="298" y="152" width="12" height="38" />
-      <rect className="a-pop" x="314" y="134" width="12" height="56" />
-      <rect className="a-pop" x="330" y="114" width="12" height="76" />
+      <path className="a-pop" d="M8 66L60 20l52 46z" />
+      <rect className="a-shape2" x="22" y="62" width="76" height="60" rx="5" />
+      <rect className="a-shape" x="48" y="84" width="22" height="38" rx="4" />
+      <rect className="a-light" x="30" y="72" width="14" height="14" rx="2" />
+      <circle className="a-sun" cx="90" cy="104" r="16" />
+      <circle className="a-cut" cx="90" cy="104" r="6" />
+      <rect className="a-sun" x="102" y="99" width="34" height="10" rx="3" />
+      <rect className="a-sun" x="118" y="107" width="7" height="10" />
+      <rect className="a-sun" x="128" y="107" width="7" height="8" />
     </>
   ),
-  // A hall with a lit doorway and lamps along the path — not any one faith's building.
-  hall: (
+  // Handyman: a toolbox.
+  toolbox: (
     <>
-      <circle className="a-sun" cx="175" cy="78" r="44" />
-      <rect className="a-ground" y="186" width="350" height="44" />
-      <rect className="a-shape" x="108" y="98" width="134" height="92" />
-      <path className="a-shape" d="M94 100l81-50 81 50z" />
-      <path className="a-light" d="M159 190v-46a16 16 0 0 1 32 0v46z" />
-      <rect className="a-light" x="122" y="120" width="14" height="28" rx="7" />
-      <rect className="a-light" x="214" y="120" width="14" height="28" rx="7" />
-      {[36, 68, 282, 314].map((x) => (
+      <rect className="a-sun" x="96" y="10" width="10" height="34" rx="5" />
+      <rect className="a-shape" x="99" y="40" width="4" height="22" />
+      <rect className="a-shape" x="46" y="28" width="48" height="36" rx="10" />
+      <rect className="a-cut" x="56" y="38" width="28" height="28" rx="4" />
+      <rect className="a-pop" x="12" y="56" width="116" height="70" rx="10" />
+      <rect className="a-shape2" x="12" y="78" width="116" height="9" />
+      <rect className="a-sun" x="58" y="70" width="24" height="24" rx="5" />
+    </>
+  ),
+  // Renovations: a paint roller.
+  roller: (
+    <>
+      <path className="a-stroke" strokeWidth="7" d="M110 37h16v34H70v16" />
+      <rect className="a-pop" x="14" y="18" width="98" height="38" rx="13" />
+      <rect className="a-light" x="26" y="26" width="52" height="7" rx="3.5" />
+      <path className="a-pop" d="M30 52v14a7 7 0 0 0 14 0V52z" />
+      <rect className="a-shape" x="61" y="84" width="18" height="46" rx="9" />
+      <rect className="a-sun" x="61" y="96" width="18" height="6" />
+    </>
+  ),
+  // Electrician: a light bulb.
+  bulb: (
+    <>
+      <path className="a-stroke a-ray" strokeWidth="5" d="M20 16l9 9M120 16l-9 9M6 60h12M122 60h12" />
+      <circle className="a-sun" cx="70" cy="54" r="38" />
+      <rect className="a-sun" x="52" y="80" width="36" height="18" />
+      <path className="a-stroke" strokeWidth="4" d="M56 62l9-13 5 13 5-13 9 13" />
+      <rect className="a-shape" x="50" y="96" width="40" height="10" rx="4" />
+      <rect className="a-shape" x="54" y="108" width="32" height="9" rx="4" />
+      <rect className="a-shape2" x="61" y="119" width="18" height="9" rx="4.5" />
+    </>
+  ),
+  // Plumber: a dripping tap.
+  tap: (
+    <>
+      <rect className="a-shape" x="6" y="34" width="12" height="40" rx="4" />
+      <rect className="a-shape2" x="14" y="44" width="72" height="20" rx="4" />
+      <path className="a-shape2" d="M82 44h14q20 0 20 20v18H96V70q0-6-6-6h-8z" />
+      <rect className="a-shape" x="45" y="28" width="10" height="18" />
+      <rect className="a-sun" x="26" y="16" width="48" height="14" rx="7" />
+      <path className="a-pop" d="M106 92q-11 15-11 22a11 11 0 0 0 22 0q0-7-11-22z" />
+    </>
+  ),
+  // Priests and temples: a diya.
+  diya: (
+    <>
+      <path className="a-sun" d="M70 12q-23 31-23 46a23 23 0 0 0 46 0q0-15-23-46z" />
+      <path className="a-light" d="M70 42q-10 14-10 20a10 10 0 0 0 20 0q0-6-10-20z" />
+      <path className="a-pop" d="M12 84h116q0 40-58 40T12 84z" />
+      <rect className="a-shape2" x="8" y="78" width="124" height="11" rx="5.5" />
+      <circle className="a-sun" cx="44" cy="102" r="4.5" />
+      <circle className="a-sun" cx="70" cy="106" r="4.5" />
+      <circle className="a-sun" cx="96" cy="102" r="4.5" />
+      <rect className="a-shape" x="50" y="122" width="40" height="9" rx="4.5" />
+    </>
+  ),
+  // Flowers and pooja items: a marigold garland.
+  garland: (
+    <>
+      {[
+        [16, 28],
+        [26, 56],
+        [45, 80],
+        [70, 90],
+        [95, 80],
+        [114, 56],
+        [124, 28],
+      ].map(([x, y], i) => (
         <g key={x}>
-          <rect className="a-shape2" x={x - 2} y="180" width="4" height="14" />
-          <circle className="a-pop" cx={x} cy="176" r="6" />
+          <circle className={i % 2 ? "a-sun" : "a-pop"} cx={x} cy={y} r="14" />
+          <circle className="a-shape" cx={x} cy={y} r="4.5" />
         </g>
       ))}
+      <rect className="a-shape2" x="68" y="102" width="4" height="10" />
+      <circle className="a-sun" cx="70" cy="120" r="11" />
+      <circle className="a-shape" cx="70" cy="120" r="3.5" />
     </>
   ),
-  // A row of shopfronts with awnings: the stand-in for any trade without its own scene.
-  shop: (
+  // Cakes: a two-tier cake.
+  cake: (
     <>
-      <circle className="a-sun" cx="290" cy="44" r="22" />
-      <rect className="a-ground" y="186" width="350" height="44" />
-      <rect className="a-shape" x="28" y="84" width="92" height="106" />
-      <rect className="a-pop" x="22" y="110" width="104" height="16" />
-      <rect className="a-light" x="42" y="136" width="32" height="34" />
-      <rect className="a-shape2" x="84" y="136" width="22" height="54" />
-      <rect className="a-shape2" x="130" y="62" width="96" height="128" />
-      <rect className="a-light" x="146" y="78" width="18" height="16" />
-      <rect className="a-light" x="192" y="78" width="18" height="16" />
-      <rect className="a-pop" x="124" y="106" width="108" height="16" />
-      <rect className="a-light" x="144" y="134" width="34" height="36" />
-      <rect className="a-shape" x="190" y="134" width="22" height="56" />
-      <rect className="a-shape" x="236" y="96" width="88" height="94" />
-      <rect className="a-pop" x="230" y="118" width="100" height="16" />
-      <rect className="a-light" x="250" y="144" width="28" height="28" />
-      <rect className="a-shape2" x="288" y="144" width="22" height="46" />
-    </>
-  ),
-  // A work van with a ladder on the roof, parked outside a building.
-  van: (
-    <>
-      <circle className="a-sun" cx="60" cy="46" r="24" />
-      <rect className="a-ground" y="186" width="350" height="44" />
-      <rect className="a-shape2" x="214" y="66" width="136" height="124" />
-      {[0, 1, 2].map((r) => [0, 1, 2].map((c) => <rect key={`${r}${c}`} className="a-light" x={232 + c * 36} y={82 + r * 32} width="18" height="18" />))}
-      <path className="a-rail" d="M66 106h92" />
-      <path className="a-pop" d="M48 188v-64q0-10 10-10h112q8 0 13 7l22 31q4 5 4 12v24z" />
-      <path className="a-light" d="M150 124h22l18 26h-40z" />
-      <rect className="a-shape" x="48" y="158" width="161" height="7" />
-      <circle className="a-shape" cx="88" cy="188" r="18" />
-      <circle className="a-light" cx="88" cy="188" r="6" />
-      <circle className="a-shape" cx="176" cy="188" r="18" />
-      <circle className="a-light" cx="176" cy="188" r="6" />
-    </>
-  ),
-  // A house with trees and a flower bed.
-  garden: (
-    <>
-      <circle className="a-sun" cx="286" cy="48" r="24" />
-      <rect className="a-ground" y="180" width="350" height="50" />
-      <rect className="a-shape" x="40" y="104" width="112" height="82" />
-      <path className="a-shape" d="M26 106l70-46 70 46z" />
-      <rect className="a-light" x="56" y="122" width="26" height="26" />
-      <rect className="a-pop" x="104" y="132" width="28" height="54" />
-      <rect className="a-shape2" x="216" y="128" width="10" height="58" />
-      <circle className="a-shape" cx="221" cy="108" r="36" />
-      <rect className="a-shape2" x="290" y="144" width="8" height="42" />
-      <circle className="a-shape2" cx="294" cy="128" r="26" />
-      {[172, 186, 252, 266, 326].map((x, i) => (
-        <circle key={x} className={i % 2 ? "a-light" : "a-pop"} cx={x} cy="184" r="5" />
+      <ellipse className="a-ground" cx="70" cy="124" rx="58" ry="7" />
+      <rect className="a-pop" x="22" y="86" width="96" height="36" rx="7" />
+      <rect className="a-light" x="22" y="82" width="96" height="12" rx="6" />
+      {[36, 58, 82, 104].map((x, i) => (
+        <circle key={x} className="a-light" cx={x} cy={i % 2 ? 97 : 95} r={i % 2 ? 6 : 5} />
       ))}
+      <rect className="a-shape2" x="40" y="54" width="60" height="30" rx="7" />
+      <rect className="a-light" x="40" y="50" width="60" height="11" rx="5.5" />
+      <rect className="a-shape" x="56" y="30" width="5" height="21" rx="2" />
+      <rect className="a-shape" x="79" y="30" width="5" height="21" rx="2" />
+      <ellipse className="a-sun" cx="58.5" cy="24" rx="4" ry="6" />
+      <ellipse className="a-sun" cx="81.5" cy="24" rx="4" ry="6" />
+      {[52, 70, 88].map((x) => (
+        <circle key={x} className="a-sun" cx={x} cy="72" r="3" />
+      ))}
+    </>
+  ),
+  // Beauty: a hand with henna.
+  henna: (
+    <>
+      <rect className="a-sun" x="20" y="62" width="14" height="38" rx="7" transform="rotate(-32 27 81)" />
+      <rect className="a-sun" x="40" y="26" width="12" height="48" rx="6" />
+      <rect className="a-sun" x="55" y="14" width="12" height="56" rx="6" />
+      <rect className="a-sun" x="70" y="16" width="12" height="54" rx="6" />
+      <rect className="a-sun" x="85" y="28" width="12" height="46" rx="6" />
+      <rect className="a-sun" x="38" y="58" width="60" height="68" rx="20" />
+      <rect className="a-pop" x="40" y="40" width="12" height="4" />
+      <rect className="a-pop" x="55" y="30" width="12" height="4" />
+      <rect className="a-pop" x="70" y="32" width="12" height="4" />
+      <rect className="a-pop" x="85" y="42" width="12" height="4" />
+      <circle className="a-pop" cx="68" cy="94" r="12" />
+      <circle className="a-sun" cx="68" cy="94" r="6.5" />
+      <circle className="a-pop" cx="68" cy="94" r="2.5" />
+      {[
+        [68, 75],
+        [87, 94],
+        [68, 113],
+        [49, 94],
+      ].map(([x, y]) => (
+        <circle key={`${x}-${y}`} className="a-shape2" cx={x} cy={y} r="3" />
+      ))}
+    </>
+  ),
+  // Tailoring: a sewing machine.
+  sewing: (
+    <>
+      <rect className="a-sun" x="60" y="16" width="18" height="18" rx="3" />
+      <rect className="a-shape2" x="65" y="9" width="8" height="8" />
+      <path className="a-pop" d="M24 110V48q0-16 16-16h66q16 0 16 16v22H98V58H56v52z" />
+      <circle className="a-sun" cx="24" cy="58" r="13" />
+      <circle className="a-shape" cx="24" cy="58" r="4.5" />
+      <circle className="a-shape2" cx="76" cy="45" r="5" />
+      <rect className="a-shape2" x="108" y="70" width="4" height="26" />
+      <rect className="a-shape" x="100" y="94" width="20" height="5" rx="2" />
+      <rect className="a-shape" x="8" y="108" width="124" height="16" rx="6" />
+    </>
+  ),
+  // Clothing: a saree on a hanger.
+  saree: (
+    <>
+      <path className="a-stroke" strokeWidth="4" d="M70 30v-7a8 8 0 1 0-8-8" />
+      <path className="a-shape" d="M70 28l46 28H24z" />
+      <path className="a-pop" d="M28 54h84v62q-10.5 12-21 0t-21 0t-21 0t-21 0z" />
+      <rect className="a-sun" x="28" y="54" width="84" height="11" />
+      <rect className="a-sun" x="58" y="65" width="11" height="50" />
+      {[40, 84, 100].map((x) => (
+        <circle key={x} className="a-light" cx={x} cy="86" r="3.5" />
+      ))}
+    </>
+  ),
+  // Classes: an open book and an anklet bell.
+  book: (
+    <>
+      <path className="a-pop" d="M10 46q30-12 58 4v76q-28-14-58-4z" />
+      <path className="a-shape2" d="M130 46q-30-12-58 4v76q28-14 58-4z" />
+      <path className="a-stroke a-page" strokeWidth="4" d="M22 62q18-5 34 2M22 80q18-5 34 2M22 98q18-5 34 2M84 64q16-7 34-2M84 82q16-7 34-2M84 100q16-7 34-2" />
+      <path className="a-stroke" strokeWidth="4" d="M104 12a8 8 0 1 0-8 8" />
+      <circle className="a-sun" cx="100" cy="28" r="15" />
+      <rect className="a-shape" x="89" y="27" width="22" height="4" rx="2" />
+    </>
+  ),
+  // Party rentals: a canopy tent.
+  tent: (
+    <>
+      <rect className="a-shape" x="68.5" y="4" width="3" height="16" />
+      <path className="a-sun" d="M71 4l15 5-15 6z" />
+      <rect className="a-shape" x="14" y="68" width="6" height="60" />
+      <rect className="a-shape" x="120" y="68" width="6" height="60" />
+      <rect className="a-shape2" x="67" y="68" width="6" height="60" />
+      <path className="a-pop" d="M6 60L70 18l64 42z" />
+      <path className="a-sun" d="M6 60h128v8q-8 9-16 0t-16 0t-16 0t-16 0t-16 0t-16 0t-16 0t-16 0z" />
+      <rect className="a-shape2" x="30" y="104" width="30" height="5" rx="2" />
+      <rect className="a-shape2" x="80" y="104" width="30" height="5" rx="2" />
+      <rect className="a-shape" x="34" y="109" width="4" height="19" />
+      <rect className="a-shape" x="52" y="109" width="4" height="19" />
+      <rect className="a-shape" x="84" y="109" width="4" height="19" />
+      <rect className="a-shape" x="102" y="109" width="4" height="19" />
+    </>
+  ),
+  // Gifts and decor: a door toran.
+  toran: (
+    <>
+      <rect className="a-shape" x="8" y="22" width="124" height="11" rx="5.5" />
+      {[14, 37, 59, 81, 104].map((x, i) => (
+        <g key={x}>
+          <path className={i % 2 ? "a-sun" : "a-pop"} d={`M${x} 33h22v${i === 2 ? 40 : 26}l-11 16l-11-16z`} />
+          <circle className="a-shape2" cx={x + 11} cy={i === 2 ? 98 : 84} r="4.5" />
+        </g>
+      ))}
+      <rect className="a-shape2" x="68" y="102" width="4" height="12" />
+      <circle className="a-pop" cx="70" cy="122" r="9" />
+      <circle className="a-sun" cx="12" cy="27" r="11" />
+      <circle className="a-sun" cx="128" cy="27" r="11" />
+      <circle className="a-shape" cx="12" cy="27" r="4" />
+      <circle className="a-shape" cx="128" cy="27" r="4" />
+    </>
+  ),
+  // Orthopedic: a knee joint.
+  knee: (
+    <>
+      <g transform="rotate(14 70 40)">
+        <rect className="a-sun" x="58" y="4" width="24" height="60" rx="10" />
+        <circle className="a-sun" cx="58" cy="62" r="14" />
+        <circle className="a-sun" cx="82" cy="62" r="14" />
+      </g>
+      <g transform="rotate(-10 70 104)">
+        <rect className="a-shape2" x="58" y="82" width="24" height="52" rx="10" />
+        <circle className="a-shape2" cx="59" cy="86" r="13" />
+        <circle className="a-shape2" cx="81" cy="86" r="13" />
+      </g>
+      <circle className="a-pop" cx="104" cy="74" r="13" />
+      <rect className="a-light" x="97" y="71.5" width="14" height="5" rx="2" />
+      <rect className="a-light" x="101.5" y="67" width="5" height="14" rx="2" />
     </>
   ),
 };
