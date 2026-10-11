@@ -1,3 +1,6 @@
+import type { CSSProperties } from "react";
+import type { CoverCrop } from "./types";
+
 /** Work photos live in a public Supabase storage bucket at <provider id>/<file>; providers.photos
  * holds those paths in display order (first = cover). */
 export const PHOTO_BUCKET = "provider-photos";
@@ -12,6 +15,17 @@ export function photoUrl(path: string) {
 
 export function photoPath(url: string) {
   return url.startsWith(publicBase()) ? url.slice(publicBase().length) : url;
+}
+
+export const MAX_ZOOM = 3;
+export const DEFAULT_CROP: CoverCrop = { x: 50, y: 50, zoom: 1 };
+
+/** Styles for a cover <img> that fills its box (object-fit: cover): keeps the focal point in
+ * place whatever shape the box is, then enlarges the photo around that same point. */
+export function coverStyle(crop: CoverCrop | undefined): CSSProperties | undefined {
+  if (!crop) return undefined;
+  const at = `${crop.x}% ${crop.y}%`;
+  return { objectPosition: at, transformOrigin: at, transform: crop.zoom > 1 ? `scale(${crop.zoom})` : undefined };
 }
 
 /** Shrinks a picked image to at most 1600px on its long edge and re-encodes it as a JPEG. Drawing

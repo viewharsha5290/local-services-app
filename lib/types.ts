@@ -75,6 +75,15 @@ export interface Provider {
   website?: string;
   /** Public URLs of the business's work photos, in display order; the first is the cover. */
   photos: string[];
+  /** How the cover photo is framed, when its manager has adjusted it. */
+  coverCrop?: CoverCrop;
+}
+
+/** The part of a cover photo to show: a focal point (percentages of the photo) and a zoom. */
+export interface CoverCrop {
+  x: number;
+  y: number;
+  zoom: number;
 }
 
 export type ContactMethod = "whatsapp" | "sms" | "call" | "chat";

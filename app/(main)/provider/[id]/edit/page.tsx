@@ -3,15 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ImagePlus, Star, Trash2, X } from "lucide-react";
+import { Crop, ImagePlus, Star, Trash2, X } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { AppLoading } from "@/components/AppLoading";
 import { PostsEditor } from "@/components/PostsEditor";
 import { Toast } from "@/components/Toast";
+import { CoverAdjuster } from "@/components/CoverAdjuster";
 import { useApp } from "@/lib/store";
 import { Provider } from "@/lib/types";
 import { searchCities } from "@/lib/cities";
-import { MAX_PHOTOS } from "@/lib/photos";
+import { MAX_PHOTOS, coverStyle } from "@/lib/photos";
 
 const RESPONSE_TIMES = ["an hour", "a few hours", "a day", "a few days"];
 const BIO_MAX = 600;
@@ -295,7 +296,9 @@ function DetailsForm({ provider, children }: { provider: Provider; children: Rea
 }
 
 function PhotosEditor({ provider }: { provider: Provider }) {
-  const { addListingPhotos, saveListingPhotos } = useApp();
+  const { addListingPhotos, saveListingPhotos, saveCoverCrop } = useApp();
+  const [adjusting, setAdjusting] = useState(false);
+  const closeAdjuster = useCallback(() => setAdjusting(false), []);
   const fileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -312,6 +315,17 @@ function PhotosEditor({ provider }: { provider: Provider }) {
     if (result.error) setError(result.error);
   }
 
+  /** Puts the photo first, then opens the adjuster so its manager can frame it straight away. */
+  async function makeCover(src: string) {
+    setBusy("Saving…");
+    setError(null);
+    setConfirming(null);
+    const result = await saveListingPhotos(provider.id, [src, ...photos.filter((p) => p !== src)]);
+    setBusy(null);
+    if (result.error) setError(result.error);
+    else setAdjusting(true);
+  }
+
   function pick(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     e.target.value = "";
@@ -324,19 +338,25 @@ function PhotosEditor({ provider }: { provider: Provider }) {
     <section className="editblock">
       <h2>Work photos</h2>
       <p className="text-muted" style={{ fontSize: 14, margin: 0 }}>
-        {`Up to ${MAX_PHOTOS} photos of your own work. The cover photo is what people see on your card in search results.`}
+        {`Up to ${MAX_PHOTOS} photos of your own work. The cover photo is what people see on your card in search results; use Adjust cover to zoom in or reposition it.`}
       </p>
       {photos.length > 0 && (
         <ul className="photogrid">
           {photos.map((src, i) => (
             <li key={src}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- served from Supabase storage */}
-              <img src={src} alt={`Work photo ${i + 1} of ${photos.length}`} loading="lazy" />
+              <span className="photothumb">
+                {/* eslint-disable-next-line @next/next/no-img-element -- served from Supabase storage */}
+                <img src={src} alt={`Work photo ${i + 1} of ${photos.length}`} loading="lazy" style={i === 0 ? coverStyle(provider.coverCrop) : undefined} />
+              </span>
               {i === 0 && <span className="covertag">Cover</span>}
               <div className="photoactions">
-                {i > 0 && (
-                  <button type="button" disabled={Boolean(busy)} onClick={() => run("Saving…", () => saveListingPhotos(provider.id, [src, ...photos.filter((p) => p !== src)]))}>
+                {i > 0 ? (
+                  <button type="button" disabled={Boolean(busy)} onClick={() => makeCover(src)}>
                     <Star size={14} /> Make cover
+                  </button>
+                ) : (
+                  <button type="button" disabled={Boolean(busy)} onClick={() => setAdjusting(true)}>
+                    <Crop size={14} /> Adjust cover
                   </button>
                 )}
                 {confirming === src ? (
@@ -352,6 +372,9 @@ function PhotosEditor({ provider }: { provider: Provider }) {
             </li>
           ))}
         </ul>
+      )}
+      {adjusting && photos.length > 0 && (
+        <CoverAdjuster key={photos[0]} src={photos[0]} initial={provider.coverCrop} onSave={(crop) => saveCoverCrop(provider.id, crop)} onClose={closeAdjuster} />
       )}
       <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={pick} />
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>

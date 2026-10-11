@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
 import { PHOTO_BUCKET, photoPath, photoUrl, prepareImage } from "./photos";
 import { DEFAULT_CATEGORIES } from "./categories";
-import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingPost, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
+import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingPost, ListingStats, CoverCrop, PendingAction, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
@@ -132,6 +132,8 @@ interface AppContextValue {
   addListingPhotos: (id: string, files: File[]) => Promise<{ error?: string }>;
   /** Sets the listing's photos to exactly these URLs, in this order; any left out are deleted. */
   saveListingPhotos: (id: string, urls: string[]) => Promise<{ error?: string }>;
+  /** How the cover photo is framed; null puts it back to centred and uncropped. */
+  saveCoverCrop: (id: string, crop: CoverCrop | null) => Promise<{ error?: string }>;
   /** Loaded per provider page rather than with the list — ~5 per provider adds up fast. */
   fetchGoogleReviews: (providerId: string) => Promise<GoogleReview[]>;
   /** The signed-in user's own claims, keyed by provider id. */
@@ -221,6 +223,8 @@ function mapProviderRow(row: any): Provider {
     ownerId: row.owner_id ?? undefined,
     website: row.website ?? undefined,
     photos: ((row.photos ?? []) as string[]).map(photoUrl),
+    // A crop only counts for the photo it was made for (migration 015).
+    coverCrop: row.cover_crop && row.cover_crop.photo === row.photos?.[0] ? { x: Number(row.cover_crop.x), y: Number(row.cover_crop.y), zoom: Number(row.cover_crop.zoom) } : undefined,
   };
 }
 
@@ -359,6 +363,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         p_responds_within: input.respondsWithin,
       });
       if (error) return { error: listingError(error.message, "Couldn't save your changes. Please try again.") };
+      await refreshProvider(id);
+      return {};
+    },
+    [refreshProvider]
+  );
+
+  const saveCoverCrop = useCallback(
+    async (id: string, crop: CoverCrop | null) => {
+      const { error } = await supabase.rpc("set_my_listing_cover_crop", { p_provider_id: id, p_x: crop?.x ?? null, p_y: crop?.y ?? null, p_zoom: crop?.zoom ?? null });
+      if (error) return { error: listingError(error.message, "Couldn't save the cover. Please try again.") };
       await refreshProvider(id);
       return {};
     },
@@ -988,6 +1002,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateListing,
     addListingPhotos,
     saveListingPhotos,
+    saveCoverCrop,
     fetchGoogleReviews,
     myClaims,
     submitClaim,

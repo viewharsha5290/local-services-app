@@ -3,6 +3,7 @@
 import { Category, Provider } from "@/lib/types";
 import { useApp } from "@/lib/store";
 import { findCategory } from "@/lib/categories";
+import { coverStyle } from "@/lib/photos";
 
 /** An illustrated scene standing in for photos a listing doesn't have. Each trade picks one
  * (categories.art); pass `art` to draw a specific scene instead. Colours come from the --art-*
@@ -26,12 +27,12 @@ export function Cover({ category, art, seed = "", className = "" }: { category?:
 }
 
 /** A listing's cover: its first work photo when it has one, otherwise the trade illustration. */
-export function ListingCover({ provider, className = "" }: { provider: Pick<Provider, "id" | "category" | "photos">; className?: string }) {
+export function ListingCover({ provider, className = "" }: { provider: Pick<Provider, "id" | "category" | "photos" | "coverCrop">; className?: string }) {
   if (provider.photos.length === 0) return <Cover category={provider.category} seed={provider.id} className={className} />;
   return (
     <span className={`cover ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element -- served from Supabase storage; next/image would need a domain allowlist */}
-      <img src={provider.photos[0]} alt="" loading="lazy" />
+      <img src={provider.photos[0]} alt="" loading="lazy" style={coverStyle(provider.coverCrop)} />
     </span>
   );
 }
