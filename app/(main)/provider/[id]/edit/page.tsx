@@ -58,16 +58,19 @@ export default function EditListingPage() {
   }
 
   return (
-    <div className="content-narrow" style={{ paddingBottom: 48 }}>
+    <div className="content-narrow">
       <TopBar back title="Edit listing" subtitle={provider.name} />
-      {/* keyed so the form starts over from the saved values if the listing is reloaded */}
       {auth.isAdmin && <CategoryForm provider={provider} />}
-      <DetailsForm key={provider.id} provider={provider} />
-      <PostsEditor provider={provider} />
-      <PhotosEditor provider={provider} />
-      <p className="text-muted" style={{ fontSize: 13.5, marginTop: 28 }}>
-        The business name and trade can&rsquo;t be changed here. Reviews and ratings come from neighbours and from Google, and can&rsquo;t be edited by the business.
-      </p>
+      {/* The details form wraps the other sections so its Save bar sits at the very bottom of the
+          screen, after everything a manager might have changed. Keyed so the form starts over
+          from the saved values if the listing is reloaded. */}
+      <DetailsForm key={provider.id} provider={provider}>
+        <PostsEditor provider={provider} />
+        <PhotosEditor provider={provider} />
+        <p className="text-muted" style={{ fontSize: 13.5, margin: "28px 0" }}>
+          The business name and trade can&rsquo;t be changed here. Reviews and ratings come from neighbours and from Google, and can&rsquo;t be edited by the business.
+        </p>
+      </DetailsForm>
     </div>
   );
 }
@@ -108,7 +111,7 @@ function CategoryForm({ provider }: { provider: Provider }) {
   );
 }
 
-function DetailsForm({ provider }: { provider: Provider }) {
+function DetailsForm({ provider, children }: { provider: Provider; children: React.ReactNode }) {
   const { updateListing } = useApp();
   const [bio, setBio] = useState(provider.bio ?? "");
   const [phone, setPhone] = useState(provider.phone ? provider.phoneDisplay : "");
@@ -145,6 +148,7 @@ function DetailsForm({ provider }: { provider: Provider }) {
   }
 
   return (
+    <>
     <section className="editblock">
       <h2>Details</h2>
       <div className="field">
@@ -257,14 +261,28 @@ function DetailsForm({ provider }: { provider: Provider }) {
           ))}
         </select>
       </div>
-      {error && <p role="alert" style={{ color: "var(--color-danger)", fontSize: 14, margin: 0 }}>{error}</p>}
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
-          {saving ? "Saving…" : "Save details"}
-        </button>
-        {saved && <span role="status" style={{ fontSize: 14, fontWeight: 600 }}>Saved. Your listing is updated.</span>}
-      </div>
     </section>
+    {children}
+    <div className="savebar">
+      <div style={{ minWidth: 0, flex: "1 1 220px" }}>
+        {error ? (
+          <span role="alert" style={{ color: "var(--color-danger)", fontWeight: 600 }}>{error}</span>
+        ) : saved ? (
+          <span role="status" style={{ fontWeight: 600 }}>Saved. Your listing is updated.</span>
+        ) : (
+          <span className="text-muted">Photos and updates save as you add them. Save changes keeps your edits to the details; Cancel leaves them as they were.</span>
+        )}
+      </div>
+      <div className="savebar-actions">
+        <Link href={`/provider/${provider.id}`} className="cancel-link">
+          Cancel
+        </Link>
+        <button type="button" className="btn btn-primary" onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+    </div>
+    </>
   );
 }
 

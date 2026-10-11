@@ -901,6 +901,14 @@ button.tag { cursor: pointer; }
 .editblock { display: flex; flex-direction: column; gap: 18px; padding: 8px 0 28px; border-bottom: 1px solid var(--color-line); margin-bottom: 20px; }
 .editblock > h2 { font-size: 21px; margin: 0; }
 .field .hint { font-size: 13px; color: var(--color-muted); }
+.savebar {
+  position: sticky; bottom: 0; z-index: 25;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 14px;
+  margin: 0 calc(var(--gutter) * -1); padding: 12px var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 12px);
+  background: var(--color-bg); border-top: 1px solid var(--color-line); font-size: 13.5px; line-height: 1.35;
+}
+.savebar-actions { display: flex; align-items: center; gap: 18px; flex: none; margin-left: auto; }
+.cancel-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; color: var(--color-text); text-decoration: underline; text-underline-offset: 3px; }
 select.input { appearance: auto; }
 .chip-x { width: 32px; height: 32px; border-radius: 50%; border: 0; background: none; color: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .chip-x:hover { background: var(--color-neutral-300); }
