@@ -846,13 +846,14 @@ button.tag { cursor: pointer; }
    Footer, legal notices and the plain pages (contact, terms, privacy)
    ════════════════════════════════════════════════════════════════════════════ */
 .legal { font-size: 13px; line-height: 1.45; color: var(--color-muted); margin: 14px 0; }
-.legal a, .field .hint a, .prose a { color: var(--color-brand-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.legal a, .field .hint a, .prose a:not(.btn) { color: var(--color-brand-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .footer { margin-top: 56px; padding: 24px 0 8px; border-top: 1px solid var(--color-line); font-size: 14px; color: var(--color-muted); }
 .footer .brand { font-size: 16px; }
 .footer p { margin: 10px 0 0; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 14px 0 0; list-style: none; }
 .footer-links a { display: inline-flex; align-items: center; min-height: 40px; color: var(--color-text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
-.infopage { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 var(--gutter) 32px; }
+.infopage { width: 100%; padding: 0 var(--gutter) 32px; }
+.infopage > main { max-width: 760px; }
 .infopage-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 72px; border-bottom: 1px solid var(--color-line); margin-bottom: 28px; }
 .infopage-head a.back { font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .prose h1 { font-size: 34px; margin: 0 0 6px; }
