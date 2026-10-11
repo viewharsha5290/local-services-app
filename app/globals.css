@@ -907,6 +907,14 @@ button.tag { cursor: pointer; }
   margin: 0 calc(var(--gutter) * -1); padding: 12px var(--gutter) calc(env(safe-area-inset-bottom, 0px) + 12px);
   background: var(--color-bg); border-top: 1px solid var(--color-line); font-size: 13.5px; line-height: 1.35;
 }
+.toast {
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 16px); left: 50%; z-index: 110;
+  display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 32px);
+  padding: 12px 18px; border-radius: 999px; background: var(--color-text); color: var(--color-bg);
+  font-size: 15px; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  transform: translateX(-50%); animation: toastIn 0.22s var(--ease);
+}
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -12px); } }
 .savebar-actions { display: flex; align-items: center; gap: 18px; flex: none; margin-left: auto; }
 .cancel-link { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 600; color: var(--color-text); text-decoration: underline; text-underline-offset: 3px; }
 select.input { appearance: auto; }

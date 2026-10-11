@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ImagePlus, Star, Trash2, X } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { AppLoading } from "@/components/AppLoading";
 import { PostsEditor } from "@/components/PostsEditor";
+import { Toast } from "@/components/Toast";
 import { useApp } from "@/lib/store";
 import { Provider } from "@/lib/types";
 import { searchCities } from "@/lib/cities";
@@ -122,6 +123,9 @@ function DetailsForm({ provider, children }: { provider: Provider; children: Rea
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  // Counts saves, so saving twice in a row shows the toast again; null when it isn't showing.
+  const [toast, setToast] = useState<number | null>(null);
+  const hideToast = useCallback(() => setToast(null), []);
 
   const suggestions = searchCities(cityQuery).filter((c) => !cities.includes(c));
   const touch = () => {
@@ -144,7 +148,10 @@ function DetailsForm({ provider, children }: { provider: Provider; children: Rea
     const result = await updateListing(provider.id, { bio, phone, areaNote, cities, respondsWithin: respondsWithin || null });
     setSaving(false);
     if (result.error) setError(result.error);
-    else setSaved(true);
+    else {
+      setSaved(true);
+      setToast((n) => (n ?? 0) + 1);
+    }
   }
 
   return (
@@ -268,7 +275,7 @@ function DetailsForm({ provider, children }: { provider: Provider; children: Rea
         {error ? (
           <span role="alert" style={{ color: "var(--color-danger)", fontWeight: 600 }}>{error}</span>
         ) : saved ? (
-          <span role="status" style={{ fontWeight: 600 }}>Saved. Your listing is updated.</span>
+          <span style={{ fontWeight: 600 }}>Saved. Your listing is updated.</span>
         ) : (
           <span className="text-muted">Photos and updates save as you add them. Save changes keeps your edits to the details; Cancel leaves them as they were.</span>
         )}
@@ -282,6 +289,7 @@ function DetailsForm({ provider, children }: { provider: Provider; children: Rea
         </button>
       </div>
     </div>
+    {toast !== null && <Toast key={toast} message="Changes saved" onDone={hideToast} />}
     </>
   );
 }
