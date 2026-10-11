@@ -27,3 +27,6 @@ insert into public.categories (name, tab_label, one, many, hook, icon, art, sort
 
 -- 2026-10-11: categories for the first dance and coding classes, and the first tailor.
 insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Classes', 'Classes', 'class or teacher', 'classes and teachers', 'Something new to learn?', 'graduation-cap', 'hall', 96), ('Tailoring', 'Tailoring', 'tailor', 'tailors', 'Needs taking in or letting out?', 'scissors', 'shop', 97) on conflict (name) do nothing;
+
+-- 2026-10-11: category for the first driving school.
+insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Driving Schools', 'Driving Schools', 'driving school', 'driving schools', 'Road test coming up?', 'car', 'garage', 98) on conflict (name) do nothing;
