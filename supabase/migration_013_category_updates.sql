@@ -24,3 +24,6 @@ insert into public.categories (name, tab_label, one, many, hook, icon, art, sort
 
 -- 2026-10-11: categories for the first mortgage agent and clothing shop listed.
 insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Mortgages', 'Mortgages', 'mortgage agent', 'mortgage agents', 'Buying or renewing a home?', 'landmark', 'columns', 45), ('Clothing', 'Clothing', 'clothing shop', 'clothing shops', 'Outfit for the occasion?', 'shirt', 'shop', 95) on conflict (name) do nothing;
+
+-- 2026-10-11: categories for the first dance and coding classes, and the first tailor.
+insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Classes', 'Classes', 'class or teacher', 'classes and teachers', 'Something new to learn?', 'graduation-cap', 'hall', 96), ('Tailoring', 'Tailoring', 'tailor', 'tailors', 'Needs taking in or letting out?', 'scissors', 'shop', 97) on conflict (name) do nothing;
