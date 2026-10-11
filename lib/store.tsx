@@ -658,11 +658,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const sendContactMessage = useCallback(async (input: { name: string; email: string; topic: ContactTopic; message: string }) => {
-    const { error } = await supabase.rpc("send_contact_message", { p_name: input.name, p_email: input.email, p_topic: input.topic, p_message: input.message });
-    if (!error) return {};
     // the function's own messages are written for the sender; anything else is ours to apologise for
-    const known = /^(Enter|Choose|Tell us|That message|You have|We are)/.test(error.message);
-    return { error: known ? `${error.message}.` : "Couldn't send your message. Please try again in a moment." };
+    const explain = (message?: string) =>
+      message && /^(Enter|Choose|Tell us|That message|You have|We are)/.test(message) ? `${message}.` : "Couldn't send your message. Please try again in a moment.";
+    // Through the site's own endpoint, which stores the message and emails the admin about it.
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(input),
+      });
+      if (res.ok) return {};
+      if (res.status === 400) return { error: explain((await res.json()).error) };
+    } catch {
+      /* endpoint unreachable: fall through and store the message directly */
+    }
+    const { error } = await supabase.rpc("send_contact_message", { p_name: input.name, p_email: input.email, p_topic: input.topic, p_message: input.message });
+    return error ? { error: explain(error.message) } : {};
   }, []);
 
   const fetchContactMessages = useCallback(async () => {
