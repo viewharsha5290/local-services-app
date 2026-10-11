@@ -117,24 +117,27 @@ export default function ProviderDetailPage() {
 
   return (
     <div className="listing">
-      <div className="listing-hero">
-        <ListingCover provider={provider} />
-        <button type="button" className="float-btn" style={{ left: 16 }} onClick={() => router.back()} aria-label="Back">
-          <ChevronLeft size={22} strokeWidth={2.5} />
+      {/* Back, share and save sit in their own bar so they never cover the photo. */}
+      <div className="listing-bar">
+        <button type="button" className="topbar-back" onClick={() => router.back()} aria-label="Back">
+          <ChevronLeft size={24} strokeWidth={2.5} />
         </button>
-        <button type="button" className="float-btn" style={{ right: 70 }} onClick={share} aria-label="Share this listing">
-          {shared ? <Check size={19} /> : <Share2 size={19} />}
+        <span style={{ flex: 1 }} />
+        <button type="button" className="topbar-back" onClick={share} aria-label="Share this listing">
+          {shared ? <Check size={21} /> : <Share2 size={21} />}
         </button>
         <button
           type="button"
-          className={`float-btn ${saved ? "on" : ""}`}
-          style={{ right: 16 }}
+          className={`topbar-back ${saved ? "on" : ""}`}
           aria-label={saved ? "Remove from saved" : "Save this listing"}
           aria-pressed={saved}
           onClick={() => requireAuth({ type: "save", providerId: provider.id })}
         >
-          <Heart size={19} fill={saved ? "currentColor" : "none"} />
+          <Heart size={21} fill={saved ? "currentColor" : "none"} />
         </button>
+      </div>
+      <div className="listing-hero">
+        <ListingCover provider={provider} />
         {provider.photos.length === 0 && <span className="art-note">Illustration, not a photo</span>}
       </div>
 
