@@ -211,6 +211,7 @@ function mapProviderRow(row: any): Provider {
     googleRatingCount: row.google_rating_count ?? undefined,
     googleMapsUri: row.google_maps_uri ?? undefined,
     ownerId: row.owner_id ?? undefined,
+    website: row.website ?? undefined,
     photos: ((row.photos ?? []) as string[]).map(photoUrl),
   };
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2, User } from "lucide-react";
+import { AtSign, BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Globe, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2, User } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { AppLoading } from "@/components/AppLoading";
 import { ListingCover } from "@/components/Cover";
@@ -24,6 +24,21 @@ function initialsOf(name: string) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+/** How to show a listing's link: "@handle" for an Instagram profile, the bare domain otherwise.
+ * Anything that isn't a plain web address is not shown at all. */
+function siteLink(website?: string) {
+  if (!website) return null;
+  try {
+    const url = new URL(website);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    const host = url.hostname.replace(/^www\./, "");
+    const handle = host === "instagram.com" ? url.pathname.split("/").filter(Boolean)[0] : undefined;
+    return handle ? { href: url.href, label: `@${handle}`, instagram: true } : { href: url.href, label: host, instagram: false };
+  } catch {
+    return null;
+  }
 }
 
 function cityNames(cities: string[]) {
@@ -97,6 +112,7 @@ export default function ProviderDetailPage() {
   const serves = cityNames(provider.cities);
   const hasGoogle = provider.googleRating != null && Boolean(provider.googleRatingCount);
   const writeReview = () => requireAuth({ type: "review", providerId: provider.id });
+  const site = siteLink(provider.website);
 
   return (
     <div className="listing">
@@ -199,6 +215,18 @@ export default function ProviderDetailPage() {
               <Clock size={24} />
               <span>
                 <b>{`Usually responds within ${provider.respondsWithin}`}</b>
+              </span>
+            </div>
+          )}
+          {site && (
+            <div className="inforow">
+              {site.instagram ? <AtSign size={24} /> : <Globe size={24} />}
+              <span style={{ minWidth: 0 }}>
+                <b>{site.instagram ? "On Instagram" : "Website"}</b>
+                <br />
+                <a href={site.href} target="_blank" rel="noopener noreferrer nofollow" className="sitelink">
+                  {site.label} <ExternalLink size={13} />
+                </a>
               </span>
             </div>
           )}
