@@ -8,8 +8,9 @@ import { TopBar } from "@/components/TopBar";
 import { AppLoading } from "@/components/AppLoading";
 import { ListingCover } from "@/components/Cover";
 import { PhotoViewer } from "@/components/PhotoViewer";
+import { PostCard } from "@/components/PostCard";
 import { GoogleRating, Stars } from "@/components/Stars";
-import { ClaimStatus, GoogleReview, ListingStats, Provider } from "@/lib/types";
+import { ClaimStatus, GoogleReview, ListingPost, ListingStats, Provider } from "@/lib/types";
 import { useApp } from "@/lib/store";
 import { useRequireAuth } from "@/lib/useActions";
 import { useSheet } from "@/components/SheetProvider";
@@ -247,6 +248,8 @@ export default function ProviderDetailPage() {
           </div>
         )}
 
+        <WhatsNew providerId={provider.id} />
+
         {provider.photos.length > 0 && (
           <div className="listing-section">
             <h2>Their work</h2>
@@ -343,6 +346,34 @@ export default function ProviderDetailPage() {
           )
         )}
       </div>
+    </div>
+  );
+}
+
+/** The business's own recent updates. Nothing is shown when there are none. */
+function WhatsNew({ providerId }: { providerId: string }) {
+  const { fetchListingPosts } = useApp();
+  const [posts, setPosts] = useState<ListingPost[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    // a manager also gets their expired updates back; the public page shows only live ones
+    fetchListingPosts(providerId).then((list) => active && setPosts(list.filter((p) => new Date(p.expiresAt).getTime() > Date.now())));
+    return () => {
+      active = false;
+    };
+  }, [providerId, fetchListingPosts]);
+
+  if (posts.length === 0) return null;
+  return (
+    <div className="listing-section">
+      <h2>What&rsquo;s new</h2>
+      <div className="scroller">
+        {posts.map((p) => (
+          <PostCard key={p.id} post={p} />
+        ))}
+      </div>
+      <p className="legal" style={{ margin: "4px 0 0" }}>Posted by the business. Check price and availability with them.</p>
     </div>
   );
 }

@@ -101,6 +101,10 @@ export default function TermsPage() {
           addresses without their agreement. You give us permission to display what you add.
         </li>
         <li>
+          &ldquo;What&rsquo;s new&rdquo; updates are written by the business, not by us. Prices and availability in them are the business&rsquo;s own,
+          may have changed, and are not an offer from The Local Services. We don&rsquo;t sell anything and take no part in any sale.
+        </li>
+        <li>
           To have a listing corrected or removed, or to report a review you believe is false, use the{" "}
           <Link href="/contact?topic=remove">contact page</Link>. We look at every request. We remove reviews that break section 4; we do not remove a
           review only because it is negative.

@@ -1,16 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Palette, Search, SearchX, User } from "lucide-react";
 import { ProviderCard } from "@/components/ProviderCard";
 import { Cover } from "@/components/Cover";
+import { PostCard } from "@/components/PostCard";
 import { StarPicker } from "@/components/Stars";
 import { ThemeSheet } from "@/components/ThemePicker";
 import { useSheet } from "@/components/SheetProvider";
 import { useApp } from "@/lib/store";
-import { Category, Provider } from "@/lib/types";
+import { Category, ListingPost, Provider } from "@/lib/types";
 import { timeAgo } from "@/lib/time";
 import { CategoryIcon } from "@/lib/categoryIcons";
 import { countLabel } from "@/lib/categories";
@@ -39,11 +40,20 @@ function rankScore(p: Provider) {
 }
 
 export default function SearchHomePage() {
-  const { auth, providers, categories, pendingFollowUp, resolveFollowUp, locationLabel } = useApp();
+  const { auth, providers, categories, pendingFollowUp, resolveFollowUp, locationLabel, fetchRecentPosts } = useApp();
   const router = useRouter();
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
   const [query, setQuery] = useState("");
+  const [recentPosts, setRecentPosts] = useState<ListingPost[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    fetchRecentPosts().then((list) => active && setRecentPosts(list));
+    return () => {
+      active = false;
+    };
+  }, [fetchRecentPosts]);
 
   const place = locationLabel?.includes(",") ? locationLabel.split(",")[0] : (locationLabel ?? "you");
 
@@ -63,6 +73,21 @@ export default function SearchHomePage() {
   const listed = categories.filter((c) => counts.get(c.name));
   const heroes = [...listed].sort((a, b) => counts.get(b.name)! - counts.get(a.name)!);
   const topRated = useMemo(() => [...providers].sort((a, b) => rankScore(b) - rankScore(a)).slice(0, 8), [providers]);
+  // Updates from businesses listed near here, at most two per business so one shop can't fill the row.
+  const newThisWeek = useMemo(() => {
+    const byId = new Map(providers.map((p) => [p.id, p]));
+    const perBusiness = new Map<string, number>();
+    return recentPosts
+      .filter((post) => {
+        if (!byId.has(post.providerId)) return false;
+        const n = (perBusiness.get(post.providerId) ?? 0) + 1;
+        perBusiness.set(post.providerId, n);
+        return n <= 2;
+      })
+      .slice(0, 12)
+      .map((post) => ({ post, provider: byId.get(post.providerId)! }));
+  }, [recentPosts, providers]);
+
   const latest = useMemo(
     () =>
       providers
@@ -154,6 +179,21 @@ export default function SearchHomePage() {
               </Link>
             ))}
           </div>
+
+          {newThisWeek.length > 0 && (
+            <>
+              <div className="section-head">
+                <h2>New this week</h2>
+              </div>
+              <div className="scroller">
+                {newThisWeek.map(({ post, provider }) => (
+                  <Link key={post.id} href={`/provider/${provider.id}`} className="postlink" aria-label={`${provider.name}: ${post.caption}`}>
+                    <PostCard post={post} businessName={provider.name} />
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="section-head">
             <h2>Top rated near you</h2>

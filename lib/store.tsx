@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
 import { PHOTO_BUCKET, photoPath, photoUrl, prepareImage } from "./photos";
 import { DEFAULT_CATEGORIES } from "./categories";
-import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
+import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingPost, ListingStats, PendingAction, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
@@ -38,7 +38,7 @@ export interface ListingInput {
 
 /** The listing functions raise messages written for the person editing; anything else is ours. */
 function listingError(message: string | undefined, fallback: string) {
-  return message && /^(Enter|The |Choose|Invalid|Not authorized|A listing|Sign in|Duplicate|Unknown)/.test(message) ? `${message}.`.replace(/\.\.$/, ".") : fallback;
+  return message && /^(Enter|The |Choose|Invalid|Not authorized|A listing|Sign in|Duplicate|Unknown|Write|That update)/.test(message) ? `${message}.`.replace(/\.\.$/, ".") : fallback;
 }
 
 /** What stands in for the name on a review posted without one. */
@@ -138,6 +138,14 @@ interface AppContextValue {
   myClaims: Record<string, ClaimStatus>;
   submitClaim: (input: ClaimInput) => Promise<{ error?: string }>;
   /** Admin only — enforced by the database, not by this client. */
+  /** "What's new" updates. Reading returns live ones to everyone, and expired ones as well to the
+   * listing's manager; writing is for the manager or an admin (migration 014). */
+  fetchListingPosts: (providerId: string) => Promise<ListingPost[]>;
+  /** Live updates from the last week, across all listings, newest first. */
+  fetchRecentPosts: () => Promise<ListingPost[]>;
+  createListingPost: (providerId: string, input: { caption: string; price: string; file: File | null }) => Promise<{ error?: string }>;
+  renewListingPost: (postId: string) => Promise<{ error?: string }>;
+  deleteListingPost: (post: ListingPost) => Promise<{ error?: string }>;
   /** The trades listings are filed under, in display order. */
   categories: CategoryInfo[];
   /** Admin only (the database refuses anyone else). Pass `originalName` to change an existing one. */
@@ -213,6 +221,19 @@ function mapProviderRow(row: any): Provider {
     ownerId: row.owner_id ?? undefined,
     website: row.website ?? undefined,
     photos: ((row.photos ?? []) as string[]).map(photoUrl),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapPostRow(row: any): ListingPost {
+  return {
+    id: row.id,
+    providerId: row.provider_id,
+    caption: row.caption,
+    price: row.price ?? undefined,
+    photo: row.photo ? photoUrl(row.photo) : undefined,
+    createdAt: row.created_at,
+    expiresAt: row.expires_at,
   };
 }
 
@@ -618,6 +639,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [establishSession]
   );
 
+  const fetchListingPosts = useCallback(async (providerId: string) => {
+    const { data } = await supabase.from("provider_posts").select("*").eq("provider_id", providerId).order("created_at", { ascending: false });
+    return (data ?? []).map(mapPostRow);
+  }, []);
+
+  const fetchRecentPosts = useCallback(async () => {
+    const now = Date.now();
+    const { data } = await supabase
+      .from("provider_posts")
+      .select("*")
+      .gt("created_at", new Date(now - 7 * 86400000).toISOString())
+      .gt("expires_at", new Date(now).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(60);
+    return (data ?? []).map(mapPostRow);
+  }, []);
+
+  const createListingPost = useCallback(async (providerId: string, input: { caption: string; price: string; file: File | null }) => {
+    let path: string | null = null;
+    try {
+      if (input.file) {
+        path = `${providerId}/posts/${crypto.randomUUID()}.jpg`;
+        const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, await prepareImage(input.file), { contentType: "image/jpeg", cacheControl: "31536000" });
+        if (error) throw new Error(error.message);
+      }
+      const { error } = await supabase.rpc("create_listing_post", { p_provider_id: providerId, p_caption: input.caption, p_price: input.price, p_photo: path });
+      if (error) throw new Error(error.message);
+      return {};
+    } catch (e) {
+      // don't leave a photo behind that no update points at
+      if (path) await supabase.storage.from(PHOTO_BUCKET).remove([path]);
+      return { error: listingError(e instanceof Error ? e.message : undefined, "Couldn't post that update. If you added a photo, use a JPEG, PNG or WebP file and try again.") };
+    }
+  }, []);
+
+  const renewListingPost = useCallback(async (postId: string) => {
+    const { error } = await supabase.rpc("renew_listing_post", { p_post_id: postId });
+    return error ? { error: listingError(error.message, "Couldn't renew that update. Please try again.") } : {};
+  }, []);
+
+  const deleteListingPost = useCallback(async (post: ListingPost) => {
+    const { data, error } = await supabase.rpc("delete_listing_post", { p_post_id: post.id });
+    if (error) return { error: listingError(error.message, "Couldn't delete that update. Please try again.") };
+    if (typeof data === "string" && data) await supabase.storage.from(PHOTO_BUCKET).remove([data]);
+    return {};
+  }, []);
+
   const currentCity = local.locationScope === "city" ? local.city : null;
 
   const saveCategory = useCallback(
@@ -925,6 +993,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     submitClaim,
     fetchPendingClaims,
     reviewClaim,
+    fetchListingPosts,
+    fetchRecentPosts,
+    createListingPost,
+    renewListingPost,
+    deleteListingPost,
     categories,
     saveCategory,
     deleteCategory,

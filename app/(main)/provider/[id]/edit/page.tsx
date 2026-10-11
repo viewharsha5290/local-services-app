@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ImagePlus, Star, Trash2, X } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { AppLoading } from "@/components/AppLoading";
+import { PostsEditor } from "@/components/PostsEditor";
 import { useApp } from "@/lib/store";
 import { Provider } from "@/lib/types";
 import { searchCities } from "@/lib/cities";
@@ -62,6 +63,7 @@ export default function EditListingPage() {
       {/* keyed so the form starts over from the saved values if the listing is reloaded */}
       {auth.isAdmin && <CategoryForm provider={provider} />}
       <DetailsForm key={provider.id} provider={provider} />
+      <PostsEditor provider={provider} />
       <PhotosEditor provider={provider} />
       <p className="text-muted" style={{ fontSize: 13.5, marginTop: 28 }}>
         The business name and trade can&rsquo;t be changed here. Reviews and ratings come from neighbours and from Google, and can&rsquo;t be edited by the business.

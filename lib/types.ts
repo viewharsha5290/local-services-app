@@ -126,6 +126,19 @@ export interface ListingStats {
   countingSince?: string;
 }
 
+/** A "What's new" update posted by the business that manages a listing. It shows publicly until
+ * `expiresAt` (30 days unless renewed). */
+export interface ListingPost {
+  id: string;
+  providerId: string;
+  caption: string;
+  price?: string;
+  /** Public URL of the post's photo, if it has one. */
+  photo?: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
 export type ContactTopic = "category" | "listing" | "remove" | "review" | "privacy" | "problem" | "other";
 
 /** A message sent to the admin through the contact form (see send_contact_message()). */

@@ -881,6 +881,21 @@ button.tag { cursor: pointer; }
 .adminrow .ico { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--color-soft); display: flex; align-items: center; justify-content: center; }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   "What's new" updates
+   ════════════════════════════════════════════════════════════════════════════ */
+.postcard { width: 230px; height: 100%; display: flex; flex-direction: column; border: var(--card-border); border-radius: calc(var(--r-card) - 2px); overflow: hidden; background: var(--color-card); color: var(--color-text); }
+.postcard img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: var(--color-soft); }
+.postcard-body { display: flex; flex-direction: column; gap: 6px; padding: 12px; flex: 1; }
+.postcard-who { font-weight: var(--font-strong-weight); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.postcard-text { font-size: 14.5px; line-height: 1.4; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.postcard-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: auto; font-size: 12.5px; color: var(--color-muted); }
+.postcard-price { padding: 3px 9px; border-radius: var(--r-chip); background: var(--color-highlight); color: var(--color-on-highlight); font-weight: var(--font-strong-weight); font-size: 13px; }
+.postlink { display: block; text-decoration: none; color: inherit; }
+.postlist { list-style: none; display: flex; flex-direction: column; }
+.postlist li { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--color-line); }
+.postlist img, .postlist .noimg { width: 64px; height: 64px; flex: none; border-radius: 12px; object-fit: cover; background: var(--color-soft); }
+
+/* ════════════════════════════════════════════════════════════════════════════
    Edit listing
    ════════════════════════════════════════════════════════════════════════════ */
 .editblock { display: flex; flex-direction: column; gap: 18px; padding: 8px 0 28px; border-bottom: 1px solid var(--color-line); margin-bottom: 20px; }
