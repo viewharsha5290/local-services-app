@@ -21,3 +21,6 @@ update public.categories set name = 'Priests & Temples', tab_label = 'Priests & 
 
 -- Renovations, split out from Handyman (small repairs) for bigger jobs; Deo Renovations was moved into it.
 insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Renovations', 'Renovations', 'renovation contractor', 'renovation contractors', 'Kitchen or bathroom due a redo?', 'hard-hat', 'house', 15) on conflict (name) do nothing;
+
+-- 2026-10-11: categories for the first mortgage agent and clothing shop listed.
+insert into public.categories (name, tab_label, one, many, hook, icon, art, sort_order) values ('Mortgages', 'Mortgages', 'mortgage agent', 'mortgage agents', 'Buying or renewing a home?', 'landmark', 'columns', 45), ('Clothing', 'Clothing', 'clothing shop', 'clothing shops', 'Outfit for the occasion?', 'shirt', 'shop', 95) on conflict (name) do nothing;

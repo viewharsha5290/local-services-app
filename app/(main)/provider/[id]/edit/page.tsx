@@ -14,6 +14,8 @@ import { MAX_PHOTOS } from "@/lib/photos";
 const RESPONSE_TIMES = ["an hour", "a few hours", "a day", "a few days"];
 const BIO_MAX = 600;
 const AREA_MAX = 60;
+// Enough for a business that works province-wide; the database function enforces the same cap.
+const MAX_CITIES = 40;
 
 /** Where the business that manages a listing (or an admin) keeps it up to date. The name, trade,
  * badges, ratings and reviews are deliberately not here — see migration 011. */
@@ -209,7 +211,7 @@ function DetailsForm({ provider }: { provider: Provider }) {
             </span>
           ))}
         </div>
-        {cities.length < 12 && (
+        {cities.length < MAX_CITIES && (
           <input
             id="edit-city"
             className="input"

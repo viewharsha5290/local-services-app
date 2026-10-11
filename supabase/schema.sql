@@ -425,7 +425,7 @@ begin
   if char_length(coalesce(p_bio, '')) > 600 then raise exception 'The description is too long'; end if;
   if char_length(coalesce(p_area_note, '')) > 60 then raise exception 'The area is too long'; end if;
   if p_responds_within is not null and p_responds_within not in ('an hour', 'a few hours', 'a day', 'a few days') then raise exception 'Invalid response time'; end if;
-  if p_cities is null or cardinality(p_cities) < 1 or cardinality(p_cities) > 12 then raise exception 'Choose between 1 and 12 cities'; end if;
+  if p_cities is null or cardinality(p_cities) < 1 or cardinality(p_cities) > 40 then raise exception 'Choose between 1 and 40 cities'; end if;
   foreach c in array p_cities loop
     if c !~ '^[^,]{2,50}, [A-Z]{2}$' then raise exception 'Invalid city'; end if;
   end loop;
