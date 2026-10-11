@@ -63,6 +63,9 @@ export interface Provider {
   bio?: string;
   /** Cities this provider offers service in — a provider can be based in one city but serve several. */
   cities: string[];
+  /** When the listing was added, and when it last had something new (photos, an update, a review). */
+  createdAt: string;
+  activityAt: string;
   reviews: Review[];
   addedByUser?: boolean;
   /** Google's own aggregate — shown beside, never merged into, `rating`/`reviewCount`. */

@@ -16,6 +16,7 @@ import { timeAgo } from "@/lib/time";
 import { CategoryIcon } from "@/lib/categoryIcons";
 import { countLabel } from "@/lib/categories";
 import { useRequireAuth } from "@/lib/useActions";
+import { SORTS, SortKey, getHomeSort, setHomeSort } from "@/lib/homeSort";
 
 function greeting() {
   const h = new Date().getHours();
@@ -39,6 +40,9 @@ function rankScore(p: Provider) {
   return p.recommendCount > 0 ? 1 : 0;
 }
 
+const LISTED = 12;
+const time = (iso: string) => new Date(iso).getTime();
+
 export default function SearchHomePage() {
   const { auth, providers, categories, pendingFollowUp, resolveFollowUp, locationLabel, fetchRecentPosts } = useApp();
   const router = useRouter();
@@ -46,6 +50,12 @@ export default function SearchHomePage() {
   const { open } = useSheet();
   const [query, setQuery] = useState("");
   const [recentPosts, setRecentPosts] = useState<ListingPost[]>([]);
+  const [sort, setSort] = useState<SortKey>(getHomeSort);
+
+  function chooseSort(key: SortKey) {
+    setHomeSort(key);
+    setSort(key);
+  }
 
   useEffect(() => {
     let active = true;
@@ -72,7 +82,18 @@ export default function SearchHomePage() {
   // A trade with nobody listed near here is left off the page: tapping it would lead nowhere.
   const listed = categories.filter((c) => counts.get(c.name));
   const heroes = [...listed].sort((a, b) => counts.get(b.name)! - counts.get(a.name)!);
-  const topRated = useMemo(() => [...providers].sort((a, b) => rankScore(b) - rankScore(a)).slice(0, 8), [providers]);
+  // Distance needs the visitor's position; listings without coordinates of their own go last.
+  const hasDistance = providers.some((p) => p.distanceKm != null);
+  const sorted = useMemo(() => {
+    const order: Record<SortKey, (a: Provider, b: Provider) => number> = {
+      active: (a, b) => time(b.activityAt) - time(a.activityAt),
+      rated: (a, b) => rankScore(b) - rankScore(a),
+      near: (a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity),
+      new: (a, b) => time(b.createdAt) - time(a.createdAt),
+    };
+    return [...providers].sort(order[sort]).slice(0, LISTED);
+  }, [providers, sort]);
+  const noteFor = (p: Provider) => (sort === "active" ? `Updated ${timeAgo(time(p.activityAt))}` : sort === "new" ? `Added ${timeAgo(time(p.createdAt))}` : undefined);
   // Updates from businesses listed near here, at most two per business so one shop can't fill the row.
   const newThisWeek = useMemo(() => {
     const byId = new Map(providers.map((p) => [p.id, p]));
@@ -196,14 +217,30 @@ export default function SearchHomePage() {
           )}
 
           <div className="section-head">
-            <h2>Top rated near you</h2>
+            <h2>{`Around ${place}`}</h2>
             <Link href="/search/results">See all</Link>
           </div>
-          <div className="scroller">
-            {topRated.map((p) => (
-              <ProviderCard key={p.id} provider={p} showCategory />
+          <div className="chip-row" role="group" aria-label="Order listings by" style={{ marginBottom: 12 }}>
+            {SORTS.map((option) => (
+              <button key={option.key} type="button" className={`chip ${sort === option.key ? "on" : ""}`} aria-pressed={sort === option.key} onClick={() => chooseSort(option.key)}>
+                {option.label}
+              </button>
             ))}
           </div>
+          {sort === "near" && !hasDistance ? (
+            <p className="sortnote">
+              To order by distance we need to know where you are. <Link href="/onboarding?change=1">Add your postal code or share your location</Link>.
+            </p>
+          ) : (
+            <>
+              {sort === "rated" && <p className="sortnote">Neighbour ratings come first, then ratings from Google.</p>}
+              <div className="scroller">
+                {sorted.map((p) => (
+                  <ProviderCard key={p.id} provider={p} showCategory note={noteFor(p)} />
+                ))}
+              </div>
+            </>
+          )}
 
           {latest.length > 0 && (
             <>

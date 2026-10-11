@@ -214,6 +214,8 @@ function mapProviderRow(row: any): Provider {
     areaNote: row.area_note ?? undefined,
     respondsWithin: row.responds_within ?? undefined,
     bio: row.bio ?? undefined,
+    createdAt: row.created_at,
+    activityAt: row.activity_at ?? row.created_at,
     cities: row.cities ?? [],
     reviews,
     addedByUser: Boolean(row.added_by),

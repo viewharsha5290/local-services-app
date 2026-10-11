@@ -29,7 +29,8 @@ export function scoreOf(p: Provider): { value: string; label: string; line: stri
   return null;
 }
 
-export function ProviderCard({ provider, showCategory = false }: { provider: Provider; showCategory?: boolean }) {
+/** `note` replaces the score line, for lists ordered by something else (e.g. "Updated 2 days ago"). */
+export function ProviderCard({ provider, showCategory = false, note }: { provider: Provider; showCategory?: boolean; note?: string }) {
   const { isSaved } = useApp();
   const requireAuth = useRequireAuth();
   const saved = isSaved(provider.id);
@@ -54,7 +55,7 @@ export function ProviderCard({ provider, showCategory = false }: { provider: Pro
           )}
         </div>
         <div className="pcard-meta">{[showCategory ? provider.category : null, place].filter(Boolean).join(" · ") || provider.category}</div>
-        <div className="pcard-meta">{score?.line ?? fallbackLine}</div>
+        <div className="pcard-meta">{note ?? score?.line ?? fallbackLine}</div>
       </Link>
       {(provider.claimed || provider.verified) && (
         <span className="pcard-badge">
