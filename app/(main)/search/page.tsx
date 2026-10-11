@@ -40,6 +40,7 @@ function rankScore(p: Provider) {
   return p.recommendCount > 0 ? 1 : 0;
 }
 
+const PER_CATEGORY = 4;
 const time = (iso: string) => new Date(iso).getTime();
 
 export default function SearchHomePage() {
@@ -83,7 +84,7 @@ export default function SearchHomePage() {
   }, [providers]);
 
   // A trade with nobody listed near here is left off the page: tapping it would lead nowhere.
-  const listed = categories.filter((c) => counts.get(c.name));
+  const listed = useMemo(() => categories.filter((c) => counts.get(c.name)), [categories, counts]);
   const heroes = [...listed].sort((a, b) => counts.get(b.name)! - counts.get(a.name)!);
   // Distance needs the visitor's position; listings without coordinates of their own go last.
   const hasDistance = providers.some((p) => p.distanceKm != null);
@@ -93,10 +94,17 @@ export default function SearchHomePage() {
       rated: (a, b) => rankScore(b) - rankScore(a),
       near: (a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity),
       new: (a, b) => time(b.createdAt) - time(a.createdAt),
+      category: (a, b) => time(b.activityAt) - time(a.activityAt),
     };
     return [...providers].sort(order[sort]);
   }, [providers, sort]);
-  const hasMore = shown < sorted.length;
+  const byCategory = sort === "category";
+  const hasMore = !byCategory && shown < sorted.length;
+  // Each trade's most recently active few, in the same order as the strip of trades above.
+  const sections = useMemo(
+    () => (byCategory ? listed.map((c) => ({ category: c, top: sorted.filter((p) => p.category === c.name).slice(0, PER_CATEGORY) })) : []),
+    [byCategory, listed, sorted]
+  );
 
   // Loads the next batch when the end of the grid comes near the bottom of the screen. Watching
   // afresh after each batch means a tall screen keeps filling until the marker is out of view.
@@ -271,6 +279,25 @@ export default function SearchHomePage() {
             <p className="sortnote">
               To order by distance we need to know where you are. <Link href="/onboarding?change=1">Add your postal code or share your location</Link>.
             </p>
+          ) : byCategory ? (
+            sections.map(({ category, top }) => (
+              <section key={category.name} className="catsection" aria-label={category.name}>
+                <div className="cat-head">
+                  <h3>
+                    <CategoryIcon icon={category.icon} size={20} />
+                    {category.name}
+                  </h3>
+                  {counts.get(category.name)! > top.length && (
+                    <Link href={`/search/results?category=${encodeURIComponent(category.name)}`}>{`See all ${counts.get(category.name)}`}</Link>
+                  )}
+                </div>
+                <div className="cardgrid">
+                  {top.map((p) => (
+                    <ProviderCard key={p.id} provider={p} note={noteFor(p)} />
+                  ))}
+                </div>
+              </section>
+            ))
           ) : (
             <>
               {sort === "rated" && <p className="sortnote">Neighbour ratings come first, then ratings from Google.</p>}

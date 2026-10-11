@@ -756,6 +756,10 @@ button.tag { cursor: pointer; }
 .cardgrid .pcard-cover { height: 132px; }
 .cardgrid .pcard-head { margin-top: 10px; font-size: 15px; }
 .cardgrid .pcard-name { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.catsection + .catsection { margin-top: 30px; }
+.cat-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 12px; }
+.cat-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 18px; }
+.cat-head a { flex: none; font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .cardgrid-end { padding: 24px 0 8px; text-align: center; font-size: 14px; color: var(--color-muted); }
 @media (min-width: 768px) {
   .cardgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 18px; }
