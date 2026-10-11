@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Palette, Search, SearchX, User } from "lucide-react";
@@ -16,7 +16,7 @@ import { timeAgo } from "@/lib/time";
 import { CategoryIcon } from "@/lib/categoryIcons";
 import { countLabel } from "@/lib/categories";
 import { useRequireAuth } from "@/lib/useActions";
-import { SORTS, SortKey, getHomeSort, setHomeSort } from "@/lib/homeSort";
+import { HOME_BATCH, SORTS, SortKey, getHomeShown, getHomeSort, setHomeShown, setHomeSort } from "@/lib/homeSort";
 
 function greeting() {
   const h = new Date().getHours();
@@ -40,7 +40,6 @@ function rankScore(p: Provider) {
   return p.recommendCount > 0 ? 1 : 0;
 }
 
-const LISTED = 12;
 const time = (iso: string) => new Date(iso).getTime();
 
 export default function SearchHomePage() {
@@ -51,10 +50,14 @@ export default function SearchHomePage() {
   const [query, setQuery] = useState("");
   const [recentPosts, setRecentPosts] = useState<ListingPost[]>([]);
   const [sort, setSort] = useState<SortKey>(getHomeSort);
+  const [shown, setShown] = useState(getHomeShown);
+  const sentinel = useRef<HTMLDivElement>(null);
 
   function chooseSort(key: SortKey) {
     setHomeSort(key);
     setSort(key);
+    setHomeShown(HOME_BATCH);
+    setShown(HOME_BATCH);
   }
 
   useEffect(() => {
@@ -91,8 +94,26 @@ export default function SearchHomePage() {
       near: (a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity),
       new: (a, b) => time(b.createdAt) - time(a.createdAt),
     };
-    return [...providers].sort(order[sort]).slice(0, LISTED);
+    return [...providers].sort(order[sort]);
   }, [providers, sort]);
+  const hasMore = shown < sorted.length;
+
+  // Loads the next batch when the end of the grid comes near the bottom of the screen. Watching
+  // afresh after each batch means a tall screen keeps filling until the marker is out of view.
+  useEffect(() => {
+    const marker = sentinel.current;
+    if (!marker || !hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        setHomeShown(getHomeShown() + HOME_BATCH);
+        setShown(getHomeShown());
+      },
+      { rootMargin: "300px" }
+    );
+    observer.observe(marker);
+    return () => observer.disconnect();
+  }, [hasMore, shown, sort]);
   const noteFor = (p: Provider) => (sort === "active" ? `Updated ${timeAgo(time(p.activityAt))}` : sort === "new" ? `Added ${timeAgo(time(p.createdAt))}` : undefined);
   // Updates from businesses listed near here, at most two per business so one shop can't fill the row.
   const newThisWeek = useMemo(() => {
@@ -216,6 +237,25 @@ export default function SearchHomePage() {
             </>
           )}
 
+          {latest.length > 0 && (
+            <>
+              <div className="section-head">
+                <h2>Latest from neighbours</h2>
+              </div>
+              <div className="feed">
+                {latest.map(({ review, provider }) => (
+                  <Link key={review.id} href={`/provider/${provider.id}`} className="feed-item">
+                    <span className="avatar" style={{ width: 44, height: 44, fontSize: 15 }}>{review.anonymous ? <User size={19} /> : initialsOf(review.author)}</span>
+                    <span style={{ minWidth: 0 }}>
+                      <b>{review.author}</b> reviewed <b>{provider.name}</b>
+                      <span className="sub">{`${review.text ? `${review.text} · ` : ""}${timeAgo(new Date(review.date).getTime())}`}</span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+
           <div className="section-head">
             <h2>{`Around ${place}`}</h2>
             <Link href="/search/results">See all</Link>
@@ -234,30 +274,18 @@ export default function SearchHomePage() {
           ) : (
             <>
               {sort === "rated" && <p className="sortnote">Neighbour ratings come first, then ratings from Google.</p>}
-              <div className="scroller">
-                {sorted.map((p) => (
+              <div className="cardgrid">
+                {sorted.slice(0, shown).map((p) => (
                   <ProviderCard key={p.id} provider={p} showCategory note={noteFor(p)} />
                 ))}
               </div>
-            </>
-          )}
-
-          {latest.length > 0 && (
-            <>
-              <div className="section-head">
-                <h2>Latest from neighbours</h2>
-              </div>
-              <div className="feed">
-                {latest.map(({ review, provider }) => (
-                  <Link key={review.id} href={`/provider/${provider.id}`} className="feed-item">
-                    <span className="avatar" style={{ width: 44, height: 44, fontSize: 15 }}>{review.anonymous ? <User size={19} /> : initialsOf(review.author)}</span>
-                    <span style={{ minWidth: 0 }}>
-                      <b>{review.author}</b> reviewed <b>{provider.name}</b>
-                      <span className="sub">{`${review.text ? `${review.text} · ` : ""}${timeAgo(new Date(review.date).getTime())}`}</span>
-                    </span>
-                  </Link>
-                ))}
-              </div>
+              {hasMore ? (
+                <div ref={sentinel} className="cardgrid-end" role="status">
+                  Loading more…
+                </div>
+              ) : (
+                <div className="cardgrid-end">{`That’s all ${sorted.length} near ${place}.`}</div>
+              )}
             </>
           )}
         </>

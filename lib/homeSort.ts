@@ -16,3 +16,13 @@ export const getHomeSort = () => current;
 export function setHomeSort(key: SortKey) {
   current = key;
 }
+
+/** How many listings the grid loads at a time, and how far this visit has scrolled into it. */
+export const HOME_BATCH = 8;
+let shown = HOME_BATCH;
+
+export const getHomeShown = () => shown;
+
+export function setHomeShown(count: number) {
+  shown = count;
+}
