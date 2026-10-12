@@ -41,8 +41,10 @@ export function AuthGateSheet({ reason }: { reason: "save" | "review" | "recomme
 
   return (
     <div>
-      <h3 style={{ margin: "0 0 6px" }}>{copy.title}</h3>
-      <p style={{ fontSize: 12.5, opacity: 0.75, margin: "0 0 16px" }}>{copy.body}</p>
+      <div className="sheet-head">
+        <h3>{copy.title}</h3>
+        <p>{copy.body}</p>
+      </div>
       <button type="button" className="btn btn-primary btn-block" style={{ marginBottom: 10 }} onClick={signIn}>
         Sign in or create account
       </button>

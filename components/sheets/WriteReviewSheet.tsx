@@ -40,7 +40,9 @@ export function WriteReviewSheet({ provider, review }: { provider: Provider; rev
 
   return (
     <div>
-      <h3 style={{ margin: "4px 0 4px" }}>{review ? `Edit your review of ${provider.name}` : `Rate ${provider.name}`}</h3>
+      <div className="sheet-head">
+        <h3>{review ? `Edit your review of ${provider.name}` : `Rate ${provider.name}`}</h3>
+      </div>
       <div style={{ margin: "16px 0 20px" }}>
         <StarPicker value={rating} onChange={setRating} />
       </div>
@@ -109,10 +111,12 @@ export function DeleteReviewSheet({ provider, review }: { provider: Provider; re
 
   return (
     <div>
-      <h3 style={{ margin: "4px 0 6px" }}>Delete your review?</h3>
-      <p className="text-muted" style={{ fontSize: 14.5, marginBottom: 18 }}>
+      <div className="sheet-head">
+        <h3>Delete your review?</h3>
+        <p>
         {`Your review of ${provider.name} will be removed for everyone. This can't be undone.`}
       </p>
+      </div>
       {error && <p style={{ fontSize: 13, color: "var(--color-danger)" }}>{error}</p>}
       <div style={{ display: "flex", gap: 10 }}>
         <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={close} disabled={deleting}>

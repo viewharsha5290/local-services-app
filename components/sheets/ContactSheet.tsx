@@ -25,12 +25,14 @@ export function ContactSheet({ provider }: { provider: Provider }) {
 
   return (
     <div>
-      <h3 style={{ margin: "0 0 4px" }}>Contact {provider.name}</h3>
-      <p style={{ fontSize: 12, opacity: 0.7, margin: "0 0 8px" }}>
+      <div className="sheet-head">
+        <h3>Contact {provider.name}</h3>
+        <p>
         {chatAvailable
           ? "Message in-app, or reach them directly — providers don't need this app installed."
           : "Opens your chat app — providers don't need this app installed."}
       </p>
+      </div>
       <div style={{ display: "flex", flexDirection: "column", marginBottom: 14 }}>
         {chatAvailable && (
           <button type="button" className="list-row" onClick={() => go("chat")}>

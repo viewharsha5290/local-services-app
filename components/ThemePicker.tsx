@@ -31,10 +31,12 @@ export function ThemePicker() {
 export function ThemeSheet() {
   return (
     <>
-      <h3 style={{ marginBottom: 4 }}>Choose your look</h3>
-      <p className="text-muted" style={{ fontSize: 14, marginBottom: 16 }}>
+      <div className="sheet-head">
+        <h3>Choose your look</h3>
+        <p>
         Same site, five styles. Your pick is remembered on this device.
       </p>
+      </div>
       <ThemePicker />
     </>
   );

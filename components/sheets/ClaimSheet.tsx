@@ -33,10 +33,12 @@ export function ClaimSheet({ provider }: { provider: Provider }) {
   if (done) {
     return (
       <div>
-        <h3 style={{ margin: "4px 0 6px" }}>Claim submitted</h3>
-        <p style={{ fontSize: 12.5, opacity: 0.75, margin: "0 0 16px" }}>
+        <div className="sheet-head">
+          <h3>Claim submitted</h3>
+          <p>
           {`We’ll confirm it with ${provider.name} before approving — usually by calling the number on the listing. You’ll see the result on this page.`}
         </p>
+        </div>
         <button type="button" className="btn btn-primary btn-block" onClick={close}>
           Done
         </button>
@@ -46,11 +48,13 @@ export function ClaimSheet({ provider }: { provider: Provider }) {
 
   return (
     <div>
-      <h3 style={{ margin: "4px 0 4px" }}>Claim {provider.name}</h3>
-      <p style={{ fontSize: 12, opacity: 0.7, margin: "0 0 16px" }}>
+      <div className="sheet-head">
+        <h3>Claim {provider.name}</h3>
+        <p>
         Claiming lets you manage this listing. To protect businesses, we confirm every claim
         {provider.phone ? ` by calling ${provider.phoneDisplay}` : ""} before approving it.
       </p>
+      </div>
       <div className="field" style={{ marginBottom: 12 }}>
         <label htmlFor="claim-role">Your role at this business</label>
         <select id="claim-role" className="input" value={roleTitle} onChange={(e) => setRoleTitle(e.target.value)}>
