@@ -599,7 +599,9 @@ button.tag { cursor: pointer; }
   padding: 12px 22px calc(env(safe-area-inset-bottom, 0px) + 28px);
   animation: slideUp 0.28s var(--ease);
 }
-.sheet-panel { position: relative; }
+/* a long sheet still scrolls, without a scrollbar drawn down its side */
+.sheet-panel { position: relative; scrollbar-width: none; }
+.sheet-panel::-webkit-scrollbar { display: none; }
 .sheet-close { position: absolute; top: 14px; right: 14px; z-index: 1; width: 40px; height: 40px; }
 /* keeps a sheet’s title clear of the close button */
 .sheet-panel > div > h3:first-child, .sheet-panel > form > h3:first-child { padding-right: 40px; }
