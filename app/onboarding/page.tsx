@@ -7,8 +7,17 @@ import { useApp } from "@/lib/store";
 import { HOME_POSTAL_CODE } from "@/lib/data";
 import { isValidPostalCode, normalizePostalCode } from "@/lib/postalCode";
 import { CANADIAN_CITIES, searchCities } from "@/lib/cities";
+import { BrandMark } from "@/components/BrandMark";
 
-const DEFAULT_CITY = "Toronto, ON";
+const DEFAULT_CITY = "Hamilton, ON";
+// One tap for the places most of the directory is in.
+const QUICK_CITIES = ["Hamilton, ON", "Toronto, ON", "Mississauga, ON", "Brampton, ON"];
+
+/** Where to go once a place is chosen: the page the visitor was heading for, if it's one of ours. */
+function nextPath() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/onboarding") ? next : "/search";
+}
 
 export default function OnboardingPage() {
   const { setLocation } = useApp();
@@ -16,7 +25,7 @@ export default function OnboardingPage() {
   const [code, setCode] = useState("");
   const [cityInput, setCityInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [scope, setScope] = useState<"postal" | "city">("postal");
+  const [scope, setScope] = useState<"postal" | "city">("city");
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +41,7 @@ export default function OnboardingPage() {
     const trimmed = code.trim();
     if (!trimmed) {
       setLocation({ scope: "postal", postalCode: HOME_POSTAL_CODE });
-      router.push("/search");
+      router.push(nextPath());
       return;
     }
     if (!isValidPostalCode(trimmed)) {
@@ -41,30 +50,35 @@ export default function OnboardingPage() {
     }
     setError(null);
     setLocation({ scope: "postal", postalCode: normalizePostalCode(trimmed) });
-    router.push("/search");
+    router.push(nextPath());
   }
 
   function submitCity() {
     const trimmed = cityInput.trim();
     if (!trimmed) {
       setLocation({ scope: "city", city: DEFAULT_CITY });
-      router.push("/search");
+      router.push(nextPath());
       return;
     }
     const exact = CANADIAN_CITIES.find((c) => c.toLowerCase() === trimmed.toLowerCase());
     if (exact) {
       setError(null);
       setLocation({ scope: "city", city: exact });
-      router.push("/search");
+      router.push(nextPath());
       return;
     }
     if (suggestions.length === 1) {
       setError(null);
       setLocation({ scope: "city", city: suggestions[0] });
-      router.push("/search");
+      router.push(nextPath());
       return;
     }
     setError("Select a city from the list");
+  }
+
+  function enterCity(city: string) {
+    setLocation({ scope: "city", city });
+    router.push(nextPath());
   }
 
   function submit() {
@@ -79,7 +93,7 @@ export default function OnboardingPage() {
       (position) => {
         setLocating(false);
         setLocation({ scope: "postal", postalCode: HOME_POSTAL_CODE, coords: { lat: position.coords.latitude, lng: position.coords.longitude } });
-        router.push("/search");
+        router.push(nextPath());
       },
       () => setLocating(false),
       { timeout: 8000 }
@@ -89,24 +103,19 @@ export default function OnboardingPage() {
   return (
     <div className="app-main no-tabbar" style={{ paddingTop: 40, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <div style={{ flex: 1 }}>
-        <h2 style={{ margin: "8px 0 4px" }}>Where should we search?</h2>
-        <p style={{ fontSize: 13, opacity: 0.75, margin: "0 0 20px" }}>
-          {scope === "postal"
-            ? "Enter your postal code so every result is sorted by distance from you, not the whole city."
-            : "Pick a city and we'll show providers who offer service there."}
+        <div className="welcome">
+          <span className="welcome-brand">
+            <BrandMark size={20} /> The Local Services
+          </span>
+          <h1>Find local businesses your neighbours recommend</h1>
+          <p>Cakes, tailors, mechanics, priests and more. Free to use, and no account needed to look around.</p>
+        </div>
+        <h2 style={{ margin: "0 0 4px", fontSize: 20 }}>Where are you looking?</h2>
+        <p className="text-muted" style={{ fontSize: 14, margin: "0 0 16px" }}>
+          {scope === "postal" ? "Your postal code sorts every result by distance from you." : "Pick a city to see the businesses that work there."}
         </p>
 
         <div className="seg" style={{ marginBottom: 16 }} role="radiogroup" aria-label="Search scope">
-          <button
-            type="button"
-            className={`seg-opt ${scope === "postal" ? "checked" : ""}`}
-            onClick={() => {
-              setScope("postal");
-              setError(null);
-            }}
-          >
-            Postal code
-          </button>
           <button
             type="button"
             className={`seg-opt ${scope === "city" ? "checked" : ""}`}
@@ -115,7 +124,17 @@ export default function OnboardingPage() {
               setError(null);
             }}
           >
-            City-wide
+            By city
+          </button>
+          <button
+            type="button"
+            className={`seg-opt ${scope === "postal" ? "checked" : ""}`}
+            onClick={() => {
+              setScope("postal");
+              setError(null);
+            }}
+          >
+            Near me
           </button>
         </div>
 
@@ -185,6 +204,16 @@ export default function OnboardingPage() {
           </div>
         )}
 
+        {scope === "city" && (
+          <div className="chip-row" style={{ flexWrap: "wrap" }} role="group" aria-label="Popular cities">
+            {QUICK_CITIES.map((city) => (
+              <button key={city} type="button" className="chip" onClick={() => enterCity(city)}>
+                {city.split(",")[0]}
+              </button>
+            ))}
+          </div>
+        )}
+
         {scope === "postal" && (
           <button type="button" className="btn btn-secondary btn-block" onClick={useCurrentLocation} disabled={locating}>
             <Crosshair size={16} />
@@ -193,7 +222,7 @@ export default function OnboardingPage() {
         )}
       </div>
       <button type="button" className="btn btn-primary btn-block" onClick={submit}>
-        Find providers
+        Show businesses
       </button>
     </div>
   );

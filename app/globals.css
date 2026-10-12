@@ -585,6 +585,11 @@ button.tag { cursor: pointer; }
 .hr { height: 1px; border: 0; margin: 20px 0; background: var(--color-line); }
 
 /* — sheet / modal — */
+/* first visit */
+.welcome { margin: 0 0 28px; }
+.welcome-brand { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-size: 16px; }
+.welcome h1 { margin: 22px 0 8px; font-size: 30px; line-height: 1.12; }
+.welcome p { margin: 0; font-size: 15.5px; color: var(--color-muted); }
 .sheet-backdrop {
   position: fixed; inset: 0; z-index: 100;
   display: flex; justify-content: center; align-items: flex-end;
