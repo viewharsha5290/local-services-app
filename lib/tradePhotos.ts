@@ -17,7 +17,7 @@ const UNSPLASH_IDS: Record<string, string> = {
   cake: "photo-1621303837174-89787a7d4729",
   henna: "photo-1730003873829-09b4b16444c1",
   tent: "photo-1780682571078-242672d1dd59",
-  saree: "photo-1717585679395-bbe39b5fb6bc",
+  saree: "photo-1567401893414-76b7b1e5a7a5",
   book: "photo-1533669955142-6a73332af4db",
   sewing: "photo-1466027397211-20d0f2449a3f",
   lplate: "photo-1532004252750-b411a84c8a41",
