@@ -17,6 +17,27 @@ function topScore(p: Provider) {
   return (p.reviewCount > 0 ? 10 + p.rating : 0) + (p.googleRating ?? 0) / 10;
 }
 
+/** A search word, lower-cased and without a plural "s", so "cakes" finds "cake" and the reverse. */
+const stem = (word: string) => (word.length > 3 ? word.replace(/s$/, "") : word);
+const words = (text: string) => text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(stem);
+
+/** How well a listing answers a search: 0 means not at all. Every word asked for has to appear
+ * somewhere; the name counts most, then the trade, then the description, area and reviews. */
+function relevance(p: Provider, wanted: string[], tradeWords: string) {
+  const name = words(p.name);
+  const trade = words(`${p.category} ${tradeWords}`);
+  const rest = words(`${p.bio ?? ""} ${p.areaNote ?? ""} ${p.reviews.map((r) => r.text).join(" ")}`);
+  let score = 0;
+  for (const w of wanted) {
+    const hit = (list: string[]) => list.some((x) => x.startsWith(w));
+    if (hit(name)) score += 5;
+    else if (hit(trade)) score += 3;
+    else if (hit(rest)) score += 1;
+    else return 0;
+  }
+  return score;
+}
+
 function ResultsHeader({ title, subtitle }: { title: string; subtitle: string }) {
   const goBack = useGoBack();
   return (
@@ -37,7 +58,7 @@ function ResultsHeader({ title, subtitle }: { title: string; subtitle: string })
 
 function ResultsInner() {
   const searchParams = useSearchParams();
-  const { providers, locationLabel } = useApp();
+  const { providers, locationLabel, categories } = useApp();
   const requireAuth = useRequireAuth();
   const [sort, setSort] = useState<Sort>("nearest");
   const [broaden, setBroaden] = useState(false);
@@ -49,12 +70,19 @@ function ResultsInner() {
   const filtered = useMemo(() => {
     let list = providers;
     if (category && !broaden) list = list.filter((p) => p.category === category);
-    if (q) list = list.filter((p) => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    if (q) {
+      const wanted = words(q);
+      const tradeWords = new Map(categories.map((c) => [c.name, `${c.one} ${c.many}`]));
+      const scored = list.map((p) => ({ p, score: relevance(p, wanted, tradeWords.get(p.category) ?? "") })).filter((x) => x.score > 0);
+      // best match first; the sorts below keep this order among listings they can't tell apart
+      list = scored.sort((a, b) => b.score - a.score).map((x) => x.p);
+    }
     if (sort === "nearest") list = [...list].sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     if (sort === "top") list = [...list].sort((a, b) => topScore(b) - topScore(a));
     if (sort === "verified") list = list.filter((p) => p.verified);
     return list;
-  }, [providers, category, broaden, q, sort]);
+  }, [providers, categories, category, broaden, q, sort]);
+  const anyVerified = providers.some((p) => p.verified);
 
   const title = category && !broaden ? category : q ? `"${q}"` : "Everyone nearby";
 
@@ -68,7 +96,10 @@ function ResultsInner() {
             ["top", "Top rated"],
             ["verified", "Verified only"],
           ] as [Sort, string][]
-        ).map(([id, label]) => (
+        )
+          // a filter that can only ever come back empty isn't offered
+          .filter(([id]) => id !== "verified" || anyVerified)
+          .map(([id, label]) => (
           <button key={id} type="button" className={`chip ${sort === id ? "on" : ""}`} aria-pressed={sort === id} onClick={() => setSort(id)}>
             {label}
           </button>
@@ -78,9 +109,13 @@ function ResultsInner() {
         <div className="empty-state">
           <SearchX size={40} strokeWidth={1.4} />
           <h3 style={{ margin: "14px 0 6px" }}>
-            {sort === "verified" ? "No verified listings here yet" : `No ${(category ?? "providers").toString().toLowerCase()} near ${place} yet`}
+            {sort === "verified" ? "No verified listings here yet" : q ? `Nothing found for “${q}” in ${place}` : `No ${(category ?? "businesses").toString().toLowerCase()} listed in ${place} yet`}
           </h3>
-          <p style={{ margin: "0 0 22px" }}>This area is still growing. Know someone good? Your recommendation becomes their listing.</p>
+          <p style={{ margin: "0 0 22px" }}>
+            {q
+              ? "Try a different word, or browse by trade. Know someone good for this? Your recommendation becomes their listing."
+              : "This area is still growing. Know someone good? Your recommendation becomes their listing."}
+          </p>
           <button type="button" className="btn btn-primary btn-block" style={{ marginBottom: 10 }} onClick={() => requireAuth({ type: "recommend" })}>
             Recommend a provider
           </button>
@@ -89,12 +124,18 @@ function ResultsInner() {
               Show all listings
             </button>
           ) : (
-            !broaden &&
-            category && (
-              <button type="button" className="btn btn-ghost btn-block" onClick={() => setBroaden(true)}>
-                Browse everything nearby
-              </button>
-            )
+            (q ? (
+              <Link href="/search" className="btn btn-ghost btn-block">
+                Browse by trade
+              </Link>
+            ) : (
+              !broaden &&
+              category && (
+                <button type="button" className="btn btn-ghost btn-block" onClick={() => setBroaden(true)}>
+                  Browse everything nearby
+                </button>
+              )
+            ))
           )}
         </div>
       ) : (

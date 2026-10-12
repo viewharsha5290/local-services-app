@@ -19,7 +19,7 @@ export default function SavedPage() {
             <Bookmark size={40} strokeWidth={1.4} />
             <h3 style={{ margin: "14px 0 6px" }}>No saved providers yet</h3>
             <p style={{ fontSize: 12.5, opacity: 0.7, margin: "0 0 22px" }}>
-              Tap the bookmark on any provider to keep them here.
+              Tap the heart on any listing to keep it here.
             </p>
             <Link href="/search" className="btn btn-primary btn-block">
               Browse providers
