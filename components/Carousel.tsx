@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const GAP = 14;
-const EVERY_MS = 5000;
+const EVERY_MS = 3000;
 
 /** A row of cards shown a screenful at a time: swipe on a phone, arrows with a mouse, dots for
  * where you are. It moves on by itself every few seconds until the visitor touches it, and not at
