@@ -788,6 +788,12 @@ button.tag { cursor: pointer; }
   .carousel-arrow.next { right: -14px; }
 }
 @media (hover: none) { .carousel-arrow { display: none; } }
+/* a photograph fills the card; a dark fade on the left keeps the words readable */
+.hero.has-photo { background: #1b1b1f; color: #fff; }
+.hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero.has-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0)); }
+.hero.has-photo .hero-text { right: 36%; }
+.hero.has-photo .hero-text span { opacity: 0.92; }
 .hero-chip { position: absolute; left: 16px; top: 16px; z-index: 1; padding: 6px 12px; border-radius: var(--r-chip); background: var(--color-card); color: var(--color-text); font-size: 12px; font-weight: var(--font-strong-weight); }
 .hero-text { position: absolute; left: 18px; right: 46%; bottom: 18px; z-index: 1; }
 .hero-text b { display: block; font-family: var(--font-heading); font-weight: var(--font-heading-weight); letter-spacing: var(--heading-tracking); font-size: 24px; line-height: 1.1; }

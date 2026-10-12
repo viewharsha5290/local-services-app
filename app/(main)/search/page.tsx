@@ -8,6 +8,7 @@ import { ProviderCard } from "@/components/ProviderCard";
 import { Cover, artKey } from "@/components/Cover";
 import { PostCard } from "@/components/PostCard";
 import { Carousel } from "@/components/Carousel";
+import { tradePhoto } from "@/lib/tradePhotos";
 import { StarPicker } from "@/components/Stars";
 import { ThemeSheet } from "@/components/ThemePicker";
 import { useSheet } from "@/components/SheetProvider";
@@ -219,16 +220,24 @@ export default function SearchHomePage() {
       ) : (
         <>
           <Carousel label="Trades near you">
-            {heroes.map((c) => (
-              <Link key={c.name} href={`/search/results?category=${encodeURIComponent(c.name)}`} className={`hero cover-${artKey(c.art)}`}>
-                <Cover art={c.art} layout="side" />
+            {heroes.map((c, i) => {
+              const photo = tradePhoto(artKey(c.art));
+              return (
+              <Link key={c.name} href={`/search/results?category=${encodeURIComponent(c.name)}`} className={`hero cover-${artKey(c.art)} ${photo ? "has-photo" : ""}`}>
+                {photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- a small local file; nothing for next/image to optimise
+                  <img className="hero-photo" src={photo} alt="" loading={i < 2 ? "eager" : "lazy"} />
+                ) : (
+                  <Cover art={c.art} layout="side" />
+                )}
                 <span className="hero-chip">{c.name}</span>
                 <span className="hero-text">
                   <b>{c.hook}</b>
                   <span>{`${countLabel(c, counts.get(c.name)!)} near ${place}`}</span>
                 </span>
               </Link>
-            ))}
+              );
+            })}
           </Carousel>
 
           {newThisWeek.length > 0 && (
