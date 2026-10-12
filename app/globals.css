@@ -599,6 +599,10 @@ button.tag { cursor: pointer; }
   padding: 12px 22px calc(env(safe-area-inset-bottom, 0px) + 28px);
   animation: slideUp 0.28s var(--ease);
 }
+.sheet-panel { position: relative; }
+.sheet-close { position: absolute; top: 14px; right: 14px; z-index: 1; width: 40px; height: 40px; }
+/* keeps a sheet’s title clear of the close button */
+.sheet-panel > div > h3:first-child, .sheet-panel > form > h3:first-child { padding-right: 40px; }
 .sheet-grabber { width: 40px; height: 4px; border-radius: 100px; background: var(--color-neutral-300); margin: 0 auto 18px; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(28px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

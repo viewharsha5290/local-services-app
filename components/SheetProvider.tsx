@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, ReactNode, useCallback, useContext, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 interface SheetContextValue {
   open: (node: ReactNode) => void;
@@ -15,6 +16,14 @@ export function SheetProvider({ children }: { children: ReactNode }) {
   const close = useCallback(() => setContent(null), []);
   const open = useCallback((node: ReactNode) => setContent(node), []);
 
+  // Escape closes whatever sheet is open.
+  useEffect(() => {
+    if (!content) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [content, close]);
+
   return (
     <SheetContext.Provider value={{ open, close }}>
       {children}
@@ -22,6 +31,9 @@ export function SheetProvider({ children }: { children: ReactNode }) {
         <div className="sheet-backdrop" onClick={close}>
           <div className="sheet-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="sheet-grabber" />
+            <button type="button" className="chip-x sheet-close" onClick={close} aria-label="Close">
+              <X size={20} />
+            </button>
             {content}
           </div>
         </div>
