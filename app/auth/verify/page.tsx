@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { useActionResolver } from "@/lib/useActions";
 import { PendingAction } from "@/lib/types";
+import { AppLoading } from "@/components/AppLoading";
 
 function destinationFor(action: PendingAction) {
   if (action?.type === "save" || action?.type === "review" || action?.type === "claim") return `/provider/${action.providerId}`;
@@ -74,8 +75,42 @@ function VerifyInner() {
     await signInWithEmail(email);
   }
 
+  // Coming back from Google or from the emailed link there is no code to type: the session is
+  // already in the address and signing in finishes by itself. Showing the code boxes for that
+  // moment only makes them flash past, so this waits instead, and gives up after a while.
+  const returning = !email && !linkError;
+  const [gaveUp, setGaveUp] = useState(false);
+  useEffect(() => {
+    if (!returning) return;
+    const t = setTimeout(() => setGaveUp(true), 12000);
+    return () => clearTimeout(t);
+  }, [returning]);
+
   function onKeyInput(value: string) {
     setDigits(value.replace(/\D/g, "").slice(0, 6));
+  }
+
+  if (returning) {
+    return (
+      <div className="app-main no-tabbar" style={{ paddingTop: 20, textAlign: "center" }}>
+        {gaveUp && auth.status !== "signedIn" ? (
+          <div style={{ paddingTop: 80 }}>
+            <h2 style={{ margin: "0 0 8px" }}>That didn’t finish</h2>
+            <p className="text-muted" style={{ margin: "0 0 20px" }}>We couldn’t sign you in. Please try again.</p>
+            <button type="button" className="btn btn-primary" onClick={() => router.replace("/auth/sign-in")}>
+              Back to sign in
+            </button>
+          </div>
+        ) : (
+          <>
+            <AppLoading />
+            <p className="text-muted" role="status" style={{ marginTop: -120 }}>
+              Signing you in…
+            </p>
+          </>
+        )}
+      </div>
+    );
   }
 
   return (
