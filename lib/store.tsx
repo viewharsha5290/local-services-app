@@ -154,6 +154,7 @@ interface AppContextValue {
   saveCategory: (category: CategoryInfo, originalName?: string) => Promise<{ error?: string }>;
   deleteCategory: (name: string) => Promise<{ error?: string }>;
   setListingCategory: (providerId: string, category: string) => Promise<{ error?: string }>;
+  setListingName: (providerId: string, name: string) => Promise<{ error?: string }>;
   /** The contact form: anyone can send, only an admin can read. */
   sendContactMessage: (input: { name: string; email: string; topic: ContactTopic; message: string }) => Promise<{ error?: string }>;
   fetchContactMessages: () => Promise<{ messages: ContactMessage[]; error?: string }>;
@@ -742,6 +743,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [refreshProvider]
   );
 
+  const setListingName = useCallback(
+    async (providerId: string, name: string) => {
+      const { error } = await supabase.rpc("admin_set_listing_name", { p_provider_id: providerId, p_name: name });
+      if (error) return { error: listingError(error.message, "Couldn't change the name. Please try again.") };
+      await refreshProvider(providerId);
+      return {};
+    },
+    [refreshProvider]
+  );
+
   const sendContactMessage = useCallback(async (input: { name: string; email: string; topic: ContactTopic; message: string }) => {
     // the function's own messages are written for the sender; anything else is ours to apologise for
     const explain = (message?: string) =>
@@ -1019,6 +1030,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveCategory,
     deleteCategory,
     setListingCategory,
+    setListingName,
     sendContactMessage,
     fetchContactMessages,
     setMessageHandled,

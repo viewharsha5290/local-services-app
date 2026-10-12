@@ -62,6 +62,7 @@ export default function EditListingPage() {
   return (
     <div className="content-narrow">
       <TopBar back title="Edit listing" subtitle={provider.name} />
+      {auth.isAdmin && <NameForm key={provider.id} provider={provider} />}
       {auth.isAdmin && <CategoryForm provider={provider} />}
       {/* The details form wraps the other sections so its Save bar sits at the very bottom of the
           screen, after everything a manager might have changed. Keyed so the form starts over
@@ -74,6 +75,56 @@ export default function EditListingPage() {
         </p>
       </DetailsForm>
     </div>
+  );
+}
+
+/** Admins only: fixes a misspelt or changed business name (the database function refuses anyone else). */
+function NameForm({ provider }: { provider: Provider }) {
+  const { setListingName } = useApp();
+  const [name, setName] = useState(provider.name);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState(false);
+  const hideToast = useCallback(() => setToast(false), []);
+  const cleaned = name.trim().replace(/\s+/g, " ");
+  const changed = cleaned !== provider.name;
+
+  async function save() {
+    if (cleaned.length < 2) return setError("Enter a name of at least 2 characters.");
+    setSaving(true);
+    setError(null);
+    const result = await setListingName(provider.id, cleaned);
+    setSaving(false);
+    if (result.error) setError(result.error);
+    else setToast(true);
+  }
+
+  return (
+    <section className="editblock">
+      <h2>Name</h2>
+      <div className="field">
+        <label htmlFor="edit-name">Business name (admin only)</label>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <input
+            id="edit-name"
+            className="input"
+            style={{ flex: "1 1 220px", minWidth: 0 }}
+            value={name}
+            maxLength={80}
+            onChange={(e) => {
+              setName(e.target.value);
+              setError(null);
+            }}
+          />
+          <button type="button" className="btn btn-secondary" onClick={save} disabled={saving || !changed}>
+            {saving ? "Saving…" : "Save name"}
+          </button>
+        </div>
+        <span className="hint">Saves on its own, separately from the details below. Reviews stay with the listing.</span>
+      </div>
+      {error && <p role="alert" style={{ color: "var(--color-danger)", fontSize: 14, margin: 0 }}>{error}</p>}
+      {toast && <Toast message="Name saved" onDone={hideToast} />}
+    </section>
   );
 }
 
