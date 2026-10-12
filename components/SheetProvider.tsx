@@ -29,12 +29,13 @@ export function SheetProvider({ children }: { children: ReactNode }) {
       {children}
       {content && (
         <div className="sheet-backdrop" onClick={close}>
-          <div className="sheet-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+          <div className="sheet-panel sheet-framed" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="sheet-grabber" />
             <button type="button" className="chip-x sheet-close" onClick={close} aria-label="Close">
               <X size={20} />
             </button>
-            {content}
+            {/* only this part scrolls: the title at its top sticks, and the close button stays put */}
+            <div className="sheet-scroll">{content}</div>
           </div>
         </div>
       )}
