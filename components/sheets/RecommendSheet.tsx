@@ -6,23 +6,26 @@ import { useApp } from "@/lib/store";
 import { useSheet } from "@/components/SheetProvider";
 import { StarPicker } from "@/components/Stars";
 import Link from "next/link";
+import { CANADIAN_CITIES } from "@/lib/cities";
 
 export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?: boolean }) {
-  const { addRecommendation, categories } = useApp();
+  const { addRecommendation, categories, locationLabel } = useApp();
   const { close } = useSheet();
   const router = useRouter();
   const [name, setName] = useState("");
   // No default: filing someone under the first trade in the list by accident helps nobody.
   const [category, setCategory] = useState("");
+  // Starts on the city being browsed, when there is one; someone browsing by postal code picks.
+  const [city, setCity] = useState(locationLabel && CANADIAN_CITIES.includes(locationLabel) ? locationLabel : "");
   const [phone, setPhone] = useState("");
   const [rating, setRating] = useState(5);
   const [note, setNote] = useState("");
 
-  const canSubmit = name.trim().length > 1 && note.trim().length > 3 && category !== "";
+  const canSubmit = name.trim().length > 1 && note.trim().length > 3 && category !== "" && city !== "";
 
   async function submit() {
     if (!canSubmit) return;
-    const id = await addRecommendation({ name: name.trim(), category, phone: phone.trim(), rating, note: note.trim() });
+    const id = await addRecommendation({ name: name.trim(), category, city, phone: phone.trim(), rating, note: note.trim() });
     close();
     if (navigateOnSubmit && id) router.push(`/provider/${id}`);
   }
@@ -53,6 +56,20 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
             Suggest a category
           </Link>
         </span>
+      </div>
+      <div className="field" style={{ marginBottom: 12 }}>
+        <label htmlFor="recommend-city">City they work in</label>
+        <select id="recommend-city" className="input" required value={city} onChange={(e) => setCity(e.target.value)}>
+          <option value="" disabled>
+            Choose a city
+          </option>
+          {CANADIAN_CITIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        <span className="hint">People find listings by city, so this decides where they show up.</span>
       </div>
       <div className="field" style={{ marginBottom: 12 }}>
         <label>Phone number</label>

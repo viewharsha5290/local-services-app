@@ -14,6 +14,8 @@ const FOLLOW_UP_DELAY_MS = 1000 * 60 * 60 * 48;
 interface RecommendInput {
   name: string;
   category: Provider["category"];
+  /** The city the business works in. Listings are found by city, so one without is never seen. */
+  city: string;
   phone: string;
   rating: number;
   note: string;
@@ -892,12 +894,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (input: RecommendInput): Promise<string> => {
       if (auth.status !== "signedIn" || !auth.id) return "";
       const authorName = auth.name ?? "Neighbor";
-      // Tag it with whatever city the user is currently browsing, so a provider recommended
-      // from a city-wide search actually shows up in that search afterward.
-      const cities = local.locationScope === "city" && local.city ? [local.city] : [];
+      // Stored the way every other listing's number is, so the call and WhatsApp links work.
+      const digits = input.phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
+      const tenDigit = digits.length === 10;
+      const phone = tenDigit ? `+1${digits}` : input.phone || null;
+      const phoneDisplay = tenDigit ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : input.phone || null;
       const { data: providerRow } = await supabase
         .from("providers")
-        .insert({ name: input.name, category: input.category, phone: input.phone || null, phone_display: input.phone || null, recommend_count: 1, added_by: auth.id, cities })
+        .insert({ name: input.name, category: input.category, phone, phone_display: phoneDisplay, recommend_count: 1, added_by: auth.id, cities: [input.city] })
         .select()
         .single();
       if (!providerRow) return "";
