@@ -1,5 +1,6 @@
 "use client";
 
+import { useGoBack } from "@/lib/useGoBack";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, Send, ShieldCheck } from "lucide-react";
@@ -15,6 +16,7 @@ interface Message {
 export default function ChatPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const goBack = useGoBack();
   const { getProvider } = useApp();
   const provider = getProvider(params.id);
 
@@ -55,7 +57,7 @@ export default function ChatPage() {
   return (
     <div className="app-main no-tabbar" style={{ paddingTop: 12, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, paddingBottom: 12, borderBottom: "1px solid var(--color-divider)" }}>
-        <button type="button" className="topbar-back" onClick={() => router.back()} aria-label="Back">
+        <button type="button" className="topbar-back" onClick={goBack} aria-label="Back">
           <ChevronLeft size={22} />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>

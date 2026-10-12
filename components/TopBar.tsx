@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ChevronLeft, MapPin } from "lucide-react";
 import { useApp } from "@/lib/store";
+import { useGoBack } from "@/lib/useGoBack";
 
 interface TopBarProps {
   back?: boolean;
@@ -13,13 +13,13 @@ interface TopBarProps {
 }
 
 export function TopBar({ back, title, subtitle, location }: TopBarProps) {
-  const router = useRouter();
+  const goBack = useGoBack();
   const { locationLabel } = useApp();
 
   return (
     <div className="topbar">
       {back && (
-        <button type="button" className="topbar-back" onClick={() => router.back()} aria-label="Back">
+        <button type="button" className="topbar-back" onClick={goBack} aria-label="Back">
           <ChevronLeft size={22} />
         </button>
       )}

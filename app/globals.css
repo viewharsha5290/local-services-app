@@ -842,6 +842,7 @@ button.tag { cursor: pointer; }
 .listing-bar .topbar-back:last-child { margin-right: -10px; }
 .listing-bar .topbar-back:not(:first-child) { margin-left: 0; }
 .listing-bar .topbar-back.on { color: var(--color-brand); }
+@media (min-width: 768px) { .listing-home { display: none; } }
 .listing-hero { position: relative; height: 300px; margin: 0 calc(var(--gutter) * -1) 0; }
 .listing-hero .cover { position: absolute; inset: 0; }
 .listing-hero .art-note { position: absolute; right: 16px; bottom: 38px; padding: 4px 9px; border-radius: 8px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 12px; font-weight: 600; }

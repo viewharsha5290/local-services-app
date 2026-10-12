@@ -1,9 +1,10 @@
 "use client";
 
+import { useGoBack } from "@/lib/useGoBack";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { AtSign, BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Globe, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2, User } from "lucide-react";
+import { AtSign, BadgeCheck, Check, ChevronLeft, Clock, ExternalLink, Globe, Heart, MapPin, MessageSquare, Pencil, Phone, Share2, ShieldCheck, Trash2, User, Home } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { AppLoading } from "@/components/AppLoading";
 import { ListingCover } from "@/components/Cover";
@@ -49,6 +50,7 @@ function cityNames(cities: string[]) {
 export default function ProviderDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const goBack = useGoBack();
   const { auth, getProvider, refreshProvider, isSaved, logContact, myClaims, myListings, refreshMyListings } = useApp();
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
@@ -119,9 +121,13 @@ export default function ProviderDetailPage() {
     <div className="listing">
       {/* Back, share and save sit in their own bar so they never cover the photo. */}
       <div className="listing-bar">
-        <button type="button" className="topbar-back" onClick={() => router.back()} aria-label="Back">
+        <button type="button" className="topbar-back" onClick={goBack} aria-label="Back">
           <ChevronLeft size={24} strokeWidth={2.5} />
         </button>
+        {/* phones have no top navigation on a listing, so this is the way home */}
+        <Link href="/search" className="topbar-back listing-home" aria-label="Home">
+          <Home size={21} />
+        </Link>
         <span style={{ flex: 1 }} />
         <button type="button" className="topbar-back" onClick={share} aria-label="Share this listing">
           {shared ? <Check size={21} /> : <Share2 size={21} />}

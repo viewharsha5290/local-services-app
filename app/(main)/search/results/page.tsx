@@ -1,8 +1,9 @@
 "use client";
 
+import { useGoBack } from "@/lib/useGoBack";
 import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ChevronLeft, Search, SearchX } from "lucide-react";
 import { ProviderCard } from "@/components/ProviderCard";
 import { useApp } from "@/lib/store";
@@ -17,10 +18,10 @@ function topScore(p: Provider) {
 }
 
 function ResultsHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  const router = useRouter();
+  const goBack = useGoBack();
   return (
     <div className="results-head">
-      <button type="button" className="topbar-back" onClick={() => router.back()} aria-label="Back">
+      <button type="button" className="topbar-back" onClick={goBack} aria-label="Back">
         <ChevronLeft size={24} strokeWidth={2.5} />
       </button>
       <Link href="/search" className="searchpill compact" aria-label={`${title}, ${subtitle}. Start a new search`}>
