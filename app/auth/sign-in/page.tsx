@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useApp } from "@/lib/store";
+import { supabase } from "@/lib/supabase";
 
 type Mode = "signup" | "signin";
 
@@ -18,6 +19,27 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  // Google sign-in is offered only once it has been switched on for the project, which the
+  // sign-in service reports publicly; until then the button would lead to an error page.
+  const [googleOn, setGoogleOn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "" } })
+      .then((r) => r.json())
+      .then((settings) => active && setGoogleOn(Boolean(settings?.external?.google)))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  /** Hands over to Google; it returns to the same page the email link does, which finishes signing in. */
+  async function continueWithGoogle() {
+    setError(null);
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/verify` } });
+    if (oauthError) setError("Couldn’t reach Google. Use your email instead.");
+  }
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -117,6 +139,18 @@ export default function SignInPage() {
             {mode === "signup" ? "Sign in" : "Create an account"}
           </button>
         </p>
+        {googleOn && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, color: "var(--color-muted)", fontSize: 12 }}>
+              <span style={{ flex: 1, height: 1, background: "var(--color-line)" }} />
+              or
+              <span style={{ flex: 1, height: 1, background: "var(--color-line)" }} />
+            </div>
+            <button type="button" className="btn btn-secondary btn-block" style={{ marginBottom: 14 }} onClick={continueWithGoogle}>
+              Continue with Google
+            </button>
+          </>
+        )}
         <p style={{ fontSize: 11, color: "var(--color-neutral-600)", margin: "4px 0 0" }}>
           No password needed — we&rsquo;ll email you a sign-in link and code. Your email is never shown publicly.
         </p>
