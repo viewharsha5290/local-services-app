@@ -18,7 +18,7 @@ const OLD_KEYS: Record<string, string> = {
   garden: "garland",
 };
 
-/** The drawing a categories.art value stands for; anything unknown gets the clothes hanger. */
+/** The drawing a categories.art value stands for; anything unknown gets the saree. */
 export function artKey(art: string) {
   const key = OLD_KEYS[art] ?? art;
   return key in OBJECTS ? key : "saree";
@@ -322,17 +322,19 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <rect className="a-shape" x="8" y="108" width="124" height="16" rx="6" />
     </>
   ),
-  // Clothing: a saree on a hanger.
+  // Clothing: a saree draped on a dress form.
   saree: (
     <>
-      <path className="a-stroke" strokeWidth="4" d="M70 30v-7a8 8 0 1 0-8-8" />
-      <path className="a-shape" d="M70 28l46 28H24z" />
-      <path className="a-pop" d="M28 54h84v62q-10.5 12-21 0t-21 0t-21 0t-21 0z" />
-      <rect className="a-sun" x="28" y="54" width="84" height="11" />
-      <rect className="a-sun" x="58" y="65" width="11" height="50" />
-      {[40, 84, 100].map((x) => (
-        <circle key={x} className="a-light" cx={x} cy="86" r="3.5" />
-      ))}
+      <rect className="a-shape" x="67" y="116" width="6" height="12" />
+      <rect className="a-shape" x="48" y="126" width="44" height="7" rx="3.5" />
+      <rect className="a-shape" x="62" y="8" width="16" height="12" rx="5" />
+      <path className="a-sun" d="M44 24q26 12 52 0l5 22q-9 10-7 24H46q2-14-7-24z" />
+      <path className="a-pop" d="M47 68h46l21 50q-44 12-88 0z" />
+      <path className="a-shape2" d="M30 108q40 11 80 0l4 10q-44 12-88 0z" />
+      <path className="a-stroke a-ray" strokeWidth="3" d="M70 76v30M58 76l-6 28M82 76l6 28" />
+      <path className="a-shape2" d="M92 70L56 20l-14 6 34 46z" />
+      <path className="a-shape2" d="M42 26l14-6-2 62q-10 6-20 0z" />
+      <path className="a-sun" d="M34 74q10 5 20 0v8q-10 6-20 0z" />
     </>
   ),
   // Classes: an open book and an anklet bell.
@@ -382,22 +384,19 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <circle className="a-shape" cx="128" cy="27" r="4" />
     </>
   ),
-  // Orthopedic: a knee joint.
+  // Orthopedic: a bent leg with a sore knee.
   knee: (
     <>
-      <g transform="rotate(14 70 40)">
-        <rect className="a-sun" x="58" y="4" width="24" height="60" rx="10" />
-        <circle className="a-sun" cx="58" cy="62" r="14" />
-        <circle className="a-sun" cx="82" cy="62" r="14" />
-      </g>
-      <g transform="rotate(-10 70 104)">
-        <rect className="a-shape2" x="58" y="82" width="24" height="52" rx="10" />
-        <circle className="a-shape2" cx="59" cy="86" r="13" />
-        <circle className="a-shape2" cx="81" cy="86" r="13" />
-      </g>
-      <circle className="a-pop" cx="104" cy="74" r="13" />
-      <rect className="a-light" x="97" y="71.5" width="14" height="5" rx="2" />
-      <rect className="a-light" x="101.5" y="67" width="5" height="14" rx="2" />
+      <rect className="a-sun" x="18" y="20" width="78" height="28" rx="14" transform="rotate(30 32 34)" />
+      <rect className="a-sun" x="61" y="45" width="28" height="78" rx="14" transform="rotate(12 75 59)" />
+      <rect className="a-sun" x="54" y="100" width="48" height="22" rx="11" />
+      <circle className="a-pop" cx="77" cy="58" r="13" />
+      <circle className="a-light" cx="77" cy="58" r="5" />
+      <path className="a-pop" d="M100 44q9 13 0 27l-6-4q5-9 0-19z" />
+      <path className="a-pop" d="M113 36q14 21 0 43l-6-4q10-17 0-35z" />
+      <circle className="a-shape2" cx="30" cy="92" r="14" />
+      <rect className="a-light" x="22.5" y="89.5" width="15" height="5" rx="2" />
+      <rect className="a-light" x="27.5" y="84.5" width="5" height="15" rx="2" />
     </>
   ),
 };

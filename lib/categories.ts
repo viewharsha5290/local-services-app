@@ -45,10 +45,10 @@ export const ART_OPTIONS: { key: string; label: string }[] = [
   { key: "cake", label: "Tiered cake" },
   { key: "henna", label: "Henna hand" },
   { key: "tent", label: "Canopy tent" },
-  { key: "saree", label: "Saree on a hanger" },
+  { key: "saree", label: "Saree on a dress form" },
   { key: "book", label: "Book and bell" },
   { key: "sewing", label: "Sewing machine" },
   { key: "lplate", label: "Learner's car" },
   { key: "toran", label: "Door toran" },
-  { key: "knee", label: "Knee joint" },
+  { key: "knee", label: "Sore knee" },
 ];
