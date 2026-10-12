@@ -35,8 +35,11 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
 
   return (
     <div>
-      <h3 style={{ margin: "4px 0 4px" }}>Recommend a provider</h3>
-      <p style={{ fontSize: 12, opacity: 0.7, margin: "0 0 16px" }}>Not in the directory yet? Add them.</p>
+      {/* stays put while the form scrolls beneath it */}
+      <div className="sheet-head">
+        <h3>Recommend a provider</h3>
+        <p>Not in the directory yet? Add them.</p>
+      </div>
       <div className="field" style={{ marginBottom: 12 }}>
         <label>Name / business</label>
         <input className="input" placeholder="e.g. Sarah Kaur, CPA" value={name} onChange={(e) => setName(e.target.value)} />
