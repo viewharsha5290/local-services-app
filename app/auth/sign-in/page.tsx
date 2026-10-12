@@ -117,18 +117,7 @@ export default function SignInPage() {
             {mode === "signup" ? "Sign in" : "Create an account"}
           </button>
         </p>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, color: "var(--color-neutral-500)", fontSize: 11 }}>
-          <span style={{ flex: 1, height: 1, background: "var(--color-divider)" }} />
-          or
-          <span style={{ flex: 1, height: 1, background: "var(--color-divider)" }} />
-        </div>
-        <button type="button" className="btn btn-secondary btn-block" style={{ marginBottom: 10 }} disabled title="Coming soon">
-          Continue with Apple
-        </button>
-        <button type="button" className="btn btn-secondary btn-block" disabled title="Coming soon">
-          Continue with Google
-        </button>
-        <p style={{ fontSize: 11, color: "var(--color-neutral-600)", margin: "16px 0 0" }}>
+        <p style={{ fontSize: 11, color: "var(--color-neutral-600)", margin: "4px 0 0" }}>
           No password needed — we&rsquo;ll email you a sign-in link and code. Your email is never shown publicly.
         </p>
       </div>
