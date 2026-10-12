@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — The Local Services",
+  title: "Privacy Policy",
   description: "What The Local Services collects, why, who can see it, and how to have it corrected or deleted.",
 };
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Use — The Local Services",
+  title: "Terms of Use",
   description: "The rules for using The Local Services, for neighbours and for the businesses listed.",
 };
 

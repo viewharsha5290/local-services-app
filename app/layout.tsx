@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppProvider } from "@/lib/store";
 import { SheetProvider } from "@/components/SheetProvider";
 import { DEFAULT_THEME, THEME_INIT_SCRIPT } from "@/lib/themes";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
 
 // One font set per theme (see globals.css). Only the default theme's font is preloaded; the
 // browser fetches the others when a visitor switches to a theme that uses them.
@@ -16,9 +17,13 @@ const manrope = Manrope({ variable: "--font-manrope", subsets: ["latin"], preloa
 
 const fontVariables = [jakarta, fraunces, workSans, dmSans, bricolage, manrope].map((f) => f.variable).join(" ");
 
+// Pages that set their own title (a listing does) get the site name added after it.
 export const metadata: Metadata = {
-  title: "The Local Services — find who your neighbours trust",
-  description: "A local services directory for handymen, mechanics, attorneys and more, built on neighbour recommendations.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: `${SITE_NAME} — ${SITE_TAGLINE.toLowerCase()}`, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  openGraph: { title: `${SITE_NAME} — ${SITE_TAGLINE.toLowerCase()}`, description: SITE_DESCRIPTION, url: "/", siteName: SITE_NAME, type: "website", locale: "en_CA" },
+  twitter: { card: "summary" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
