@@ -7,6 +7,7 @@ import { useSheet } from "@/components/SheetProvider";
 import { StarPicker } from "@/components/Stars";
 import Link from "next/link";
 import { CANADIAN_CITIES } from "@/lib/cities";
+import { cleanWebsite } from "@/lib/website";
 
 export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?: boolean }) {
   const { addRecommendation, categories, locationLabel } = useApp();
@@ -18,14 +19,16 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
   // Starts on the city being browsed, when there is one; someone browsing by postal code picks.
   const [city, setCity] = useState(locationLabel && CANADIAN_CITIES.includes(locationLabel) ? locationLabel : "");
   const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState("");
   const [rating, setRating] = useState(5);
   const [note, setNote] = useState("");
 
-  const canSubmit = name.trim().length > 1 && note.trim().length > 3 && category !== "" && city !== "";
+  const site = cleanWebsite(website);
+  const canSubmit = name.trim().length > 1 && note.trim().length > 3 && category !== "" && city !== "" && !site.error;
 
   async function submit() {
     if (!canSubmit) return;
-    const id = await addRecommendation({ name: name.trim(), category, city, phone: phone.trim(), rating, note: note.trim() });
+    const id = await addRecommendation({ name: name.trim(), category, city, phone: phone.trim(), website: site.link, rating, note: note.trim() });
     close();
     if (navigateOnSubmit && id) router.push(`/provider/${id}`);
   }
@@ -74,6 +77,20 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
       <div className="field" style={{ marginBottom: 12 }}>
         <label>Phone number</label>
         <input className="input" placeholder="(416) 000-0000" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      </div>
+      <div className="field" style={{ marginBottom: 12 }}>
+        <label htmlFor="recommend-website">Website or social page (optional)</label>
+        <input
+          id="recommend-website"
+          className="input"
+          inputMode="url"
+          autoCapitalize="none"
+          placeholder="example.com or instagram.com/theirname"
+          value={website}
+          maxLength={300}
+          onChange={(e) => setWebsite(e.target.value)}
+        />
+        {site.error && <span className="hint" role="alert" style={{ color: "var(--color-danger)" }}>{site.error}</span>}
       </div>
       <div className="field" style={{ marginBottom: 12 }}>
         <label>Your rating</label>

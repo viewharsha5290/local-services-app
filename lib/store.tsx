@@ -16,6 +16,8 @@ interface RecommendInput {
   category: Provider["category"];
   /** The city the business works in. Listings are found by city, so one without is never seen. */
   city: string;
+  /** Its website or social page, already cleaned (lib/website.ts), or null. */
+  website: string | null;
   phone: string;
   rating: number;
   note: string;
@@ -157,6 +159,8 @@ interface AppContextValue {
   deleteCategory: (name: string) => Promise<{ error?: string }>;
   setListingCategory: (providerId: string, category: string) => Promise<{ error?: string }>;
   setListingName: (providerId: string, name: string) => Promise<{ error?: string }>;
+  /** The listing's website or social page; its manager or an admin (migration 019). */
+  setListingWebsite: (providerId: string, website: string | null) => Promise<{ error?: string }>;
   /** The contact form: anyone can send, only an admin can read. */
   sendContactMessage: (input: { name: string; email: string; topic: ContactTopic; message: string }) => Promise<{ error?: string }>;
   fetchContactMessages: () => Promise<{ messages: ContactMessage[]; error?: string }>;
@@ -755,6 +759,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [refreshProvider]
   );
 
+  const setListingWebsite = useCallback(
+    async (providerId: string, website: string | null) => {
+      const { error } = await supabase.rpc("set_my_listing_website", { p_provider_id: providerId, p_website: website });
+      if (error) return { error: listingError(error.message, "Couldn't save the website. Please try again.") };
+      await refreshProvider(providerId);
+      return {};
+    },
+    [refreshProvider]
+  );
+
   const sendContactMessage = useCallback(async (input: { name: string; email: string; topic: ContactTopic; message: string }) => {
     // the function's own messages are written for the sender; anything else is ours to apologise for
     const explain = (message?: string) =>
@@ -901,7 +915,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const phoneDisplay = tenDigit ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : input.phone || null;
       const { data: providerRow } = await supabase
         .from("providers")
-        .insert({ name: input.name, category: input.category, phone, phone_display: phoneDisplay, recommend_count: 1, added_by: auth.id, cities: [input.city] })
+        .insert({ name: input.name, category: input.category, phone, phone_display: phoneDisplay, website: input.website, recommend_count: 1, added_by: auth.id, cities: [input.city] })
         .select()
         .single();
       if (!providerRow) return "";
@@ -1035,6 +1049,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     deleteCategory,
     setListingCategory,
     setListingName,
+    setListingWebsite,
     sendContactMessage,
     fetchContactMessages,
     setMessageHandled,

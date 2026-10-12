@@ -13,6 +13,7 @@ import { useApp } from "@/lib/store";
 import { Provider } from "@/lib/types";
 import { searchCities } from "@/lib/cities";
 import { MAX_PHOTOS, coverStyle } from "@/lib/photos";
+import { cleanWebsite } from "@/lib/website";
 
 const RESPONSE_TIMES = ["an hour", "a few hours", "a day", "a few days"];
 const BIO_MAX = 600;
@@ -115,7 +116,8 @@ function CategoryForm({ provider }: { provider: Provider }) {
 }
 
 function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAdmin: boolean; children: React.ReactNode }) {
-  const { updateListing, setListingName } = useApp();
+  const { updateListing, setListingName, setListingWebsite } = useApp();
+  const [website, setWebsite] = useState(provider.website ?? "");
   // Only an admin can correct the name; the database refuses anyone else (migration 018).
   const [name, setName] = useState(provider.name);
   const [bio, setBio] = useState(provider.bio ?? "");
@@ -152,10 +154,13 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
       areaNote !== (provider.areaNote ?? "") ||
       respondsWithin !== (provider.respondsWithin ?? "") ||
       cities.join("|") !== provider.cities.join("|");
-    // A name fix on its own doesn't re-save the details, so it works on listings whose details
+    // A name or website change on its own doesn't re-save the details, so it works on listings whose details
     // wouldn't pass the checks below (no phone number, or one from outside Canada).
-    const saveDetails = detailsChanged || !nameChanged;
+    const site = cleanWebsite(website);
+    const websiteChanged = site.link !== (provider.website ?? null);
+    const saveDetails = detailsChanged || !(nameChanged || websiteChanged);
     if (nameChanged && cleanName.length < 2) return setError("Enter a name of at least 2 characters.");
+    if (site.error) return setError(site.error);
     if (saveDetails) {
       const digits = phone.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
       if (digits.length !== 10) return setError("Enter a 10-digit phone number.");
@@ -165,6 +170,7 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
     setError(null);
     let result: { error?: string } = {};
     if (nameChanged) result = await setListingName(provider.id, cleanName);
+    if (!result.error && websiteChanged) result = await setListingWebsite(provider.id, site.link);
     if (!result.error && saveDetails) result = await updateListing(provider.id, { bio, phone, areaNote, cities, respondsWithin: respondsWithin || null });
     setSaving(false);
     if (result.error) setError(result.error);
@@ -224,6 +230,25 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
           }}
         />
         <span className="hint">Neighbours call and message this number straight from your listing.</span>
+      </div>
+      <div className="field">
+        <label htmlFor="edit-website">Website or social page</label>
+        <input
+          id="edit-website"
+          className="input"
+          type="url"
+          inputMode="url"
+          autoComplete="url"
+          autoCapitalize="none"
+          placeholder="example.com or instagram.com/yourname"
+          value={website}
+          maxLength={300}
+          onChange={(e) => {
+            setWebsite(e.target.value);
+            touch();
+          }}
+        />
+        <span className="hint">One link: your own website, or your Instagram or Facebook page. Leave it empty to show none.</span>
       </div>
       <div className="field">
         <label htmlFor="edit-area">Neighbourhood or area</label>
