@@ -77,6 +77,8 @@ export default function ProviderDetailPage() {
     };
   }, [provider, params.id, refreshProvider]);
 
+  const [googlePhoto, setGooglePhoto] = useGooglePhoto(provider);
+
   if (!provider && !lookedUp) return <AppLoading />;
 
   if (!provider) {
@@ -143,8 +145,33 @@ export default function ProviderDetailPage() {
         </button>
       </div>
       <div className="listing-hero">
-        <ListingCover provider={provider} />
-        {provider.photos.length === 0 && <span className="art-note">Illustration, not a photo</span>}
+        {googlePhoto ? (
+          <span className="cover">
+            {/* eslint-disable-next-line @next/next/no-img-element -- loaded straight from Google, which does not allow copies */}
+            <img src={googlePhoto.src} alt="" referrerPolicy="no-referrer" onError={() => setGooglePhoto(null)} />
+          </span>
+        ) : (
+          <ListingCover provider={provider} />
+        )}
+        {googlePhoto ? (
+          <span className="art-note">
+            Photo from Google
+            {googlePhoto.authors.slice(0, 1).map((a) => (
+              <span key={a.name}>
+                {" · "}
+                {a.uri ? (
+                  <a href={a.uri} target="_blank" rel="noopener noreferrer">
+                    {a.name}
+                  </a>
+                ) : (
+                  a.name
+                )}
+              </span>
+            ))}
+          </span>
+        ) : (
+          provider.photos.length === 0 && <span className="art-note">Illustration, not a photo</span>
+        )}
       </div>
 
       <div className="listing-body">
@@ -479,6 +506,33 @@ function ClaimRow({
     );
   }
   return <p style={{ fontSize: 14, color: "var(--color-muted)", margin: "28px 0 0", textAlign: "center" }}>{content}</p>;
+}
+
+interface GooglePhoto {
+  src: string;
+  authors: { name: string; uri: string | null }[];
+}
+
+/** A listing imported from Google Maps with no photo of its own shows Google’s photo of the place,
+ * fetched fresh rather than stored (see app/api/google-photo). Null means keep the illustration. */
+function useGooglePhoto(provider: Provider | undefined) {
+  const id = provider?.id;
+  const wanted = Boolean(provider && provider.photos.length === 0 && provider.googleMapsUri);
+  const state = useState<GooglePhoto | null>(null);
+  const setPhoto = state[1];
+  useEffect(() => {
+    if (!wanted) return;
+    let active = true;
+    fetch(`/api/google-photo/${id}`)
+      .then((r) => (r.status === 200 ? r.json() : null))
+      .then((photo) => active && setPhoto(photo))
+      .catch(() => {});
+    return () => {
+      active = false;
+      setPhoto(null);
+    };
+  }, [wanted, id, setPhoto]);
+  return state;
 }
 
 /** Kept visually and structurally apart from neighbour reviews: these are strangers' Google Maps

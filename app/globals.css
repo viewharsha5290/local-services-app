@@ -863,6 +863,7 @@ button.tag { cursor: pointer; }
 .listing-hero { position: relative; height: 300px; margin: 0 calc(var(--gutter) * -1) 0; }
 .listing-hero .cover { position: absolute; inset: 0; }
 .listing-hero .art-note { position: absolute; right: 16px; bottom: 38px; padding: 4px 9px; border-radius: 8px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 12px; font-weight: 600; }
+.listing-hero .art-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .listing-body { position: relative; margin: -24px calc(var(--gutter) * -1) 0; padding: 24px var(--gutter) 8px; border-radius: 28px 28px 0 0; background: var(--color-bg); }
 .listing-body h1 { font-size: 30px; margin: 0; }
 .listing-sub { margin-top: 6px; font-size: 15px; color: var(--color-muted); }
