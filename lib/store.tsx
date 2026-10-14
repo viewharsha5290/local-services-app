@@ -649,6 +649,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       options: name ? { shouldCreateUser: true, emailRedirectTo, data: { name } } : { shouldCreateUser: false, emailRedirectTo },
     });
     if (error?.code === "otp_disabled") return { noAccount: true };
+    // Only one email a minute goes to the same address; the raw message for that reads oddly.
+    if (error?.code === "over_email_send_rate_limit") return { error: "We just emailed you. Check your inbox, or wait a minute and try again." };
     return { error: error?.message };
   }, []);
 

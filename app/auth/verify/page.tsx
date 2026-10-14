@@ -15,6 +15,7 @@ function destinationFor(action: PendingAction) {
 }
 
 const subscribeNever = () => () => {};
+const RESEND_AFTER = 60;
 
 function readLinkError() {
   const description = new URLSearchParams(window.location.hash.slice(1)).get("error_description");
@@ -28,7 +29,8 @@ function VerifyInner() {
   const { auth, hydrated, signInWithEmail, verifyEmailCode, consumePendingAction } = useApp();
   const resolve = useActionResolver();
   const [digits, setDigits] = useState("");
-  const [seconds, setSeconds] = useState(24);
+  // The sender allows one email a minute to the same address, so asking sooner would send nothing.
+  const [seconds, setSeconds] = useState(RESEND_AFTER);
   const [error, setError] = useState<string | null>(null);
   // An expired or already-used email link lands here with the reason in the URL hash. Read via
   // useSyncExternalStore so the server render (which has no hash) and hydration agree.
@@ -71,8 +73,10 @@ function VerifyInner() {
       router.replace("/auth/sign-in");
       return;
     }
-    setSeconds(24);
-    await signInWithEmail(email);
+    setSeconds(RESEND_AFTER);
+    setError(null);
+    const { error: sendError } = await signInWithEmail(email);
+    if (sendError) setError(sendError);
   }
 
   // Coming back from Google or from the emailed link there is no code to type: the session is
@@ -144,7 +148,7 @@ function VerifyInner() {
         {(error ?? linkError) && <p style={{ fontSize: 12, color: "#b3413a", margin: "0 0 12px" }}>{error ?? linkError}</p>}
         <div style={{ fontSize: 12, color: "var(--color-neutral-600)" }}>
           {seconds > 0 ? (
-            `Resend email in 0:${seconds.toString().padStart(2, "0")}`
+            `Resend email in ${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`
           ) : (
             <button type="button" className="btn btn-ghost" style={{ padding: 0 }} onClick={resend}>
               Resend email
