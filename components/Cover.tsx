@@ -252,6 +252,24 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <rect className="a-shape" x="50" y="124" width="40" height="9" rx="4.5" />
     </>
   ),
+  // Tiffin and catering: a stacked steel tiffin carrier.
+  tiffin: (
+    <>
+      <ellipse className="a-ground" cx="70" cy="128" rx="54" ry="6" />
+      <path className="a-stroke" strokeWidth="8" d="M52 34V22q0-12 18-12t18 12v12" />
+      <rect className="a-shape" x="18" y="34" width="7" height="90" rx="3.5" />
+      <rect className="a-shape" x="115" y="34" width="7" height="90" rx="3.5" />
+      <rect className="a-shape2" x="34" y="30" width="72" height="12" rx="6" />
+      {[40, 68, 96].map((y, i) => (
+        <g key={y}>
+          <rect className={i === 1 ? "a-sun" : "a-pop"} x="26" y={y} width="88" height="26" rx="9" />
+          <rect className="a-light" x="34" y={y + 6} width="10" height="14" rx="5" />
+          <rect className="a-shape2" x="26" y={y + 22} width="88" height="4" rx="2" />
+        </g>
+      ))}
+      <rect className="a-shape" x="16" y="56" width="108" height="6" rx="3" />
+    </>
+  ),
   // Flowers and pooja items: a marigold garland.
   garland: (
     <>
