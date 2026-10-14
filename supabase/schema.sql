@@ -635,3 +635,8 @@ end $$;
 
 revoke execute on function set_my_listing_website(uuid, text) from public, anon;
 grant execute on function set_my_listing_website(uuid, text) to authenticated;
+
+-- ── Migration 020: credit for photos that are not the business's own ──
+-- Maps a photo's storage path to who took it (today: photos copied from Google Maps by
+-- scripts/import-google-photos.mjs). Shown on the cover; such photos stay out of "Their work".
+alter table public.providers add column if not exists photo_credits jsonb not null default '{}'::jsonb;

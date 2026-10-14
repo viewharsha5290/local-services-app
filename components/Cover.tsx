@@ -227,7 +227,7 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <path className="a-pop" d="M106 92q-11 15-11 22a11 11 0 0 0 22 0q0-7-11-22z" />
     </>
   ),
-  // Priests and temples: a diya.
+  // A diya, for a category that is specifically about Hindu ceremonies.
   diya: (
     <>
       <path className="a-sun" d="M70 12q-23 31-23 46a23 23 0 0 0 46 0q0-15-23-46z" />
@@ -238,6 +238,18 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <circle className="a-sun" cx="70" cy="106" r="4.5" />
       <circle className="a-sun" cx="96" cy="102" r="4.5" />
       <rect className="a-shape" x="50" y="122" width="40" height="9" rx="4.5" />
+    </>
+  ),
+  // Priests and places of worship of any faith: a lit candle.
+  candle: (
+    <>
+      <path className="a-sun" d="M70 6q-17 24-17 36a17 17 0 0 0 34 0q0-12-17-36z" />
+      <path className="a-light" d="M70 30q-7 10-7 15a7 7 0 0 0 14 0q0-5-7-15z" />
+      <rect className="a-shape" x="67" y="54" width="6" height="14" rx="3" />
+      <rect className="a-pop" x="46" y="62" width="48" height="58" rx="8" />
+      <path className="a-light" d="M46 76q8 8 14 0t14 2q6 8 10 0t10-2v-6a8 8 0 0 0-8-8H54a8 8 0 0 0-8 8z" />
+      <rect className="a-shape2" x="22" y="114" width="96" height="11" rx="5.5" />
+      <rect className="a-shape" x="50" y="124" width="40" height="9" rx="4.5" />
     </>
   ),
   // Flowers and pooja items: a marigold garland.

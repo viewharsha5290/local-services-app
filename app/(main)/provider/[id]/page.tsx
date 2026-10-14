@@ -115,6 +115,10 @@ export default function ProviderDetailPage() {
 
   const saved = isSaved(provider.id);
   const serves = cityNames(provider.cities);
+  // A photo copied from Google Maps is credited on the cover and kept out of "Their work".
+  const coverCredit = provider.photos[0] ? provider.photoCredits?.[provider.photos[0]] : undefined;
+  const ownPhotos = provider.photos.filter((p) => !provider.photoCredits?.[p]);
+  const credit = googlePhoto ? { name: googlePhoto.authors[0]?.name, uri: googlePhoto.authors[0]?.uri ?? undefined } : coverCredit;
   const hasGoogle = provider.googleRating != null && Boolean(provider.googleRatingCount);
   const writeReview = () => requireAuth({ type: "review", providerId: provider.id });
   const site = siteLink(provider.website);
@@ -153,21 +157,17 @@ export default function ProviderDetailPage() {
         ) : (
           <ListingCover provider={provider} />
         )}
-        {googlePhoto ? (
+        {credit ? (
           <span className="art-note">
             Photo from Google
-            {googlePhoto.authors.slice(0, 1).map((a) => (
-              <span key={a.name}>
-                {" · "}
-                {a.uri ? (
-                  <a href={a.uri} target="_blank" rel="noopener noreferrer">
-                    {a.name}
-                  </a>
-                ) : (
-                  a.name
-                )}
-              </span>
-            ))}
+            {credit.name && " · "}
+            {credit.name && credit.uri ? (
+              <a href={credit.uri} target="_blank" rel="noopener noreferrer">
+                {credit.name}
+              </a>
+            ) : (
+              credit.name
+            )}
           </span>
         ) : (
           provider.photos.length === 0 && <span className="art-note">Illustration, not a photo</span>
@@ -286,11 +286,11 @@ export default function ProviderDetailPage() {
 
         <WhatsNew providerId={provider.id} />
 
-        {provider.photos.length > 0 && (
+        {ownPhotos.length > 0 && (
           <div className="listing-section">
             <h2>Their work</h2>
-            <WorkPhotos name={provider.name} photos={provider.photos} onOpen={setViewingPhoto} />
-            {viewingPhoto !== null && <PhotoViewer name={provider.name} photos={provider.photos} start={viewingPhoto} onClose={() => setViewingPhoto(null)} />}
+            <WorkPhotos name={provider.name} photos={ownPhotos} onOpen={setViewingPhoto} />
+            {viewingPhoto !== null && <PhotoViewer name={provider.name} photos={ownPhotos} start={viewingPhoto} onClose={() => setViewingPhoto(null)} />}
           </div>
         )}
 

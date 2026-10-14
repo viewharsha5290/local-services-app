@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
 import { PHOTO_BUCKET, photoPath, photoUrl, prepareImage } from "./photos";
 import { DEFAULT_CATEGORIES } from "./categories";
-import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingPost, ListingStats, CoverCrop, PendingAction, PendingClaim, Provider, Review } from "./types";
+import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingPost, ListingStats, CoverCrop, PendingAction, PhotoCredit, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
 // ~2 days in production. (Was a 20s demo delay before the real backend existed.)
@@ -232,6 +232,7 @@ function mapProviderRow(row: any): Provider {
     ownerId: row.owner_id ?? undefined,
     website: row.website ?? undefined,
     photos: ((row.photos ?? []) as string[]).map(photoUrl),
+    photoCredits: row.photo_credits ? Object.fromEntries(Object.entries(row.photo_credits as Record<string, PhotoCredit>).map(([path, credit]) => [photoUrl(path), credit])) : undefined,
     // A crop only counts for the photo it was made for (migration 015).
     coverCrop: row.cover_crop && row.cover_crop.photo === row.photos?.[0] ? { x: Number(row.cover_crop.x), y: Number(row.cover_crop.y), zoom: Number(row.cover_crop.zoom) } : undefined,
   };

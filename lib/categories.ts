@@ -7,7 +7,7 @@ export const DEFAULT_CATEGORIES: CategoryInfo[] = [
   { name: "Mechanic", one: "mechanic", many: "mechanics", hook: "Car making that noise?", icon: "wrench", art: "car", sortOrder: 20 },
   { name: "Attorney", one: "attorney", many: "attorneys", hook: "Need it in writing?", icon: "scale", art: "scales", sortOrder: 30 },
   { name: "Auditor", one: "auditor", many: "auditors", hook: "Books need a second look?", icon: "calculator", art: "calculator", sortOrder: 40 },
-  { name: "Priests & Places of Worship", one: "priest or place of worship", many: "priests and places of worship", hook: "Planning a ceremony?", icon: "church", art: "diya", sortOrder: 50 },
+  { name: "Priests & Places of Worship", one: "priest or place of worship", many: "priests and places of worship", hook: "Planning a ceremony?", icon: "church", art: "candle", sortOrder: 50 },
   { name: "Electrician", one: "electrician", many: "electricians", hook: "Lights flickering?", icon: "zap", art: "bulb", sortOrder: 60 },
 ];
 
@@ -38,6 +38,7 @@ export const ART_OPTIONS: { key: string; label: string }[] = [
   { key: "scales", label: "Scales" },
   { key: "calculator", label: "Calculator and ledger" },
   { key: "housekey", label: "House and key" },
+  { key: "candle", label: "Candle" },
   { key: "diya", label: "Diya lamp" },
   { key: "garland", label: "Marigold garland" },
   { key: "bulb", label: "Light bulb" },

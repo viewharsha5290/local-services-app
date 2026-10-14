@@ -85,7 +85,7 @@ export default function PrivacyPage() {
         <li>Supabase: stores the database, accounts and uploaded photos.</li>
         <li>Vercel: hosts the website.</li>
         <li>Resend: delivers sign-in emails.</li>
-        <li>Google: the source of some business details, ratings and reviews. Reviewers&rsquo; profile pictures, and the photo on a listing that has none of its own, load directly from Google.</li>
+        <li>Google: the source of some business details, ratings and reviews. Some listing photos also come from Google Maps and are credited to the person who took them. Reviewers&rsquo; profile pictures load directly from Google.</li>
       </ul>
       <p>
         These providers may store or process information outside Canada, including in the United States, where it is subject to the laws of that

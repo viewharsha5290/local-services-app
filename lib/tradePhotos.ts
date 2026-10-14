@@ -10,6 +10,7 @@ const UNSPLASH_IDS: Record<string, string> = {
   scales: "photo-1587740896339-96a76170508d",
   calculator: "photo-1554224155-6726b3ff858f",
   housekey: "photo-1759428679273-11d914866394",
+  candle: "photo-1764098979607-16574293ea83",
   diya: "photo-1764098979607-16574293ea83",
   garland: "photo-1789971649660-eefc756ee5dd",
   bulb: "photo-1758101755915-462eddc23f57",

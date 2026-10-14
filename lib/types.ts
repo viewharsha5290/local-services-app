@@ -80,6 +80,14 @@ export interface Provider {
   photos: string[];
   /** How the cover photo is framed, when its manager has adjusted it. */
   coverCrop?: CoverCrop;
+  /** Who took a photo that isn’t the business’s own, keyed by its URL (today: photos from Google Maps). */
+  photoCredits?: Record<string, PhotoCredit>;
+}
+
+export interface PhotoCredit {
+  source: "google";
+  name?: string;
+  uri?: string;
 }
 
 /** The part of a cover photo to show: a focal point (percentages of the photo) and a zoom. */
