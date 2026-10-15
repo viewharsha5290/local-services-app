@@ -11,7 +11,7 @@ import { Toast } from "@/components/Toast";
 import { CoverAdjuster } from "@/components/CoverAdjuster";
 import { useApp } from "@/lib/store";
 import { Provider } from "@/lib/types";
-import { searchCities } from "@/lib/cities";
+import { NATIONWIDE, searchCities } from "@/lib/cities";
 import { MAX_PHOTOS, coverStyle } from "@/lib/photos";
 import { cleanWebsite } from "@/lib/website";
 
@@ -20,6 +20,7 @@ const BIO_MAX = 600;
 const AREA_MAX = 60;
 // Enough for a business that works province-wide; the database function enforces the same cap.
 const MAX_CITIES = 40;
+const cityLabel = (c: string) => (c === NATIONWIDE ? "All of Canada" : c);
 
 /** Where the business that manages a listing (or an admin) keeps it up to date. The name, trade,
  * badges, ratings and reviews are deliberately not here — see migration 011. */
@@ -133,7 +134,9 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
   const [toast, setToast] = useState<number | null>(null);
   const hideToast = useCallback(() => setToast(null), []);
 
-  const suggestions = searchCities(cityQuery).filter((c) => !cities.includes(c));
+  // "All of Canada" is offered for a business that serves people anywhere (online classes, say).
+  const wantsNationwide = /^(all|can|onl|any)/i.test(cityQuery.trim());
+  const suggestions = [...(wantsNationwide ? [NATIONWIDE] : []), ...searchCities(cityQuery)].filter((c) => !cities.includes(c));
   const touch = () => {
     setSaved(false);
     setError(null);
@@ -268,12 +271,12 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
         <label htmlFor="edit-city">Cities you work in</label>
         <div className="chip-row" style={{ flexWrap: "wrap" }}>
           {cities.map((c) => (
-            <span key={c} className="chip" style={{ cursor: "default", paddingRight: 6 }}>
+            <span key={cityLabel(c)} className="chip" style={{ cursor: "default", paddingRight: 6 }}>
               {c}
               <button
                 type="button"
                 className="chip-x"
-                aria-label={`Remove ${c}`}
+                aria-label={`Remove ${cityLabel(c)}`}
                 onClick={() => {
                   setCities((list) => list.filter((x) => x !== c));
                   touch();
@@ -303,7 +306,7 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
         {suggestions.length > 0 && (
           <div className="suggest">
             {suggestions.map((c) => (
-              <button key={c} type="button" className="list-row" style={{ padding: "10px 14px", minHeight: 44 }} onClick={() => addCity(c)}>
+              <button key={cityLabel(c)} type="button" className="list-row" style={{ padding: "10px 14px", minHeight: 44 }} onClick={() => addCity(c)}>
                 {c}
               </button>
             ))}

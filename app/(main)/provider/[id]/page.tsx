@@ -18,6 +18,7 @@ import { useSheet } from "@/components/SheetProvider";
 import { ContactSheet } from "@/components/sheets/ContactSheet";
 import { DeleteReviewSheet, WriteReviewSheet } from "@/components/sheets/WriteReviewSheet";
 import { timeAgo } from "@/lib/time";
+import { NATIONWIDE } from "@/lib/cities";
 
 function initialsOf(name: string) {
   return name
@@ -43,8 +44,9 @@ function siteLink(website?: string) {
   }
 }
 
+/** The cities a listing names, without the all-of-Canada marker (that is shown as its own phrase). */
 function cityNames(cities: string[]) {
-  return cities.map((c) => c.split(",")[0]);
+  return cities.filter((c) => c !== NATIONWIDE).map((c) => c.split(",")[0]);
 }
 
 export default function ProviderDetailPage() {
@@ -115,6 +117,7 @@ export default function ProviderDetailPage() {
 
   const saved = isSaved(provider.id);
   const serves = cityNames(provider.cities);
+  const nationwide = provider.cities.includes(NATIONWIDE);
   // A photo copied from Google Maps is credited on the cover and kept out of "Their work".
   const coverCredit = provider.photos[0] ? provider.photoCredits?.[provider.photos[0]] : undefined;
   const ownPhotos = provider.photos.filter((p) => !provider.photoCredits?.[p]);
@@ -238,7 +241,7 @@ export default function ProviderDetailPage() {
           <div className="inforow">
             <MapPin size={24} />
             <span>
-              <b>{serves.length ? `Works in ${serves.slice(0, 3).join(", ")}${serves.length > 3 ? ` and ${serves.length - 3} more` : ""}` : "Local to you"}</b>
+              <b>{nationwide ? (serves.length ? `Based in ${serves[0]}, works across Canada` : "Works across Canada") : serves.length ? `Works in ${serves.slice(0, 3).join(", ")}${serves.length > 3 ? ` and ${serves.length - 3} more` : ""}` : "Local to you"}</b>
               {(provider.areaNote || provider.distanceKm != null) && (
                 <>
                   <br />

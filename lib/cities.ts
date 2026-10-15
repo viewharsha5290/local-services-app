@@ -79,6 +79,11 @@ export const CANADIAN_CITIES: string[] = [
   "Iqaluit, NU",
 ];
 
+/** Put in a listing’s cities for a business that serves everyone, wherever they are (online
+ * classes, say): it then shows to people browsing any city. Written like a city so the database’s
+ * city check accepts it; deliberately not in CANADIAN_CITIES, so nobody can browse “All of Canada”. */
+export const NATIONWIDE = "All of Canada, CA";
+
 export function searchCities(query: string, limit = 6): string[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];

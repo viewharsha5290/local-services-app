@@ -5,6 +5,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
 import { PHOTO_BUCKET, photoPath, photoUrl, prepareImage } from "./photos";
 import { DEFAULT_CATEGORIES } from "./categories";
+import { NATIONWIDE } from "./cities";
 import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingPost, ListingStats, CoverCrop, PendingAction, PhotoCredit, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
@@ -330,7 +331,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let query = supabase.from("providers").select("*, reviews:reviews_public(*)").order("created_at", { ascending: true });
     // Built by hand rather than `.contains("cities", [cityFilter])`: supabase-js serializes that
     // as an unquoted `{Toronto, ON}`, which Postgres parses as two elements and never matches.
-    if (cityFilter) query = query.filter("cities", "cs", `{"${cityFilter.replace(/["\\]/g, "\\$&")}"}`);
+    // Listings that serve all of Canada show in every city.
+    if (cityFilter) query = query.filter("cities", "ov", `{"${cityFilter.replace(/["\\]/g, "\\$&")}","${NATIONWIDE}"}`);
     const { data, error } = await query;
     if (!error && data) setProvidersBase(data.map(mapProviderRow));
   }, []);
