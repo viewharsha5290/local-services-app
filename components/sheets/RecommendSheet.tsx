@@ -6,7 +6,7 @@ import { useApp } from "@/lib/store";
 import { useSheet } from "@/components/SheetProvider";
 import { StarPicker } from "@/components/Stars";
 import Link from "next/link";
-import { CANADIAN_CITIES } from "@/lib/cities";
+import { CANADIAN_CITIES, NATIONWIDE } from "@/lib/cities";
 import { cleanWebsite } from "@/lib/website";
 
 export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?: boolean }) {
@@ -69,6 +69,7 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
           <option value="" disabled>
             Choose a city
           </option>
+          <option value={NATIONWIDE}>Online, all of Canada</option>
           {CANADIAN_CITIES.map((c) => (
             <option key={c} value={c}>
               {c}

@@ -118,6 +118,16 @@ export default function ProviderDetailPage() {
   const saved = isSaved(provider.id);
   const serves = cityNames(provider.cities);
   const nationwide = provider.cities.includes(NATIONWIDE);
+  // "Classes in Toronto", but "Classes · Online" (an area that isn’t a place) and "Clothing across Canada".
+  const placePhrase = provider.areaNote
+    ? /^online/i.test(provider.areaNote)
+      ? ` · ${provider.areaNote}`
+      : ` in ${provider.areaNote}`
+    : serves.length
+      ? ` in ${serves[0]}`
+      : nationwide
+        ? " across Canada"
+        : "";
   // A photo copied from Google Maps is credited on the cover and kept out of "Their work".
   const coverCredit = provider.photos[0] ? provider.photoCredits?.[provider.photos[0]] : undefined;
   const ownPhotos = provider.photos.filter((p) => !provider.photoCredits?.[p]);
@@ -179,7 +189,7 @@ export default function ProviderDetailPage() {
 
       <div className="listing-body">
         <h1>{provider.name}</h1>
-        <div className="listing-sub">{`${provider.category}${provider.areaNote ? ` in ${provider.areaNote}` : serves.length ? ` in ${serves[0]}` : ""}`}</div>
+        <div className="listing-sub">{`${provider.category}${placePhrase}`}</div>
         {provider.verified && (
           <div className="listing-tags">
             <span className="tag tag-accent" style={{ gap: 4 }}>
