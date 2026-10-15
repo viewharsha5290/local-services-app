@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Crop, ImagePlus, Star, Trash2, X } from "lucide-react";
+import { Crop, ImagePlus, Star, Trash2 } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
 import { AppLoading } from "@/components/AppLoading";
 import { PostsEditor } from "@/components/PostsEditor";
 import { Toast } from "@/components/Toast";
 import { CoverAdjuster } from "@/components/CoverAdjuster";
+import { AreaPicker } from "@/components/AreaPicker";
 import { useApp } from "@/lib/store";
 import { Provider } from "@/lib/types";
-import { NATIONWIDE, searchCities } from "@/lib/cities";
 import { MAX_PHOTOS, coverStyle } from "@/lib/photos";
 import { cleanWebsite } from "@/lib/website";
 
@@ -19,8 +19,6 @@ const RESPONSE_TIMES = ["an hour", "a few hours", "a day", "a few days"];
 const BIO_MAX = 600;
 const AREA_MAX = 60;
 // Enough for a business that works province-wide; the database function enforces the same cap.
-const MAX_CITIES = 40;
-const cityLabel = (c: string) => (c === NATIONWIDE ? "All of Canada" : c);
 
 /** Where the business that manages a listing (or an admin) keeps it up to date. The name, trade,
  * badges, ratings and reviews are deliberately not here — see migration 011. */
@@ -126,7 +124,6 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
   const [areaNote, setAreaNote] = useState(provider.areaNote ?? "");
   const [cities, setCities] = useState<string[]>(provider.cities);
   const [respondsWithin, setRespondsWithin] = useState(provider.respondsWithin ?? "");
-  const [cityQuery, setCityQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -134,19 +131,10 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
   const [toast, setToast] = useState<number | null>(null);
   const hideToast = useCallback(() => setToast(null), []);
 
-  // "All of Canada" is offered for a business that serves people anywhere (online classes, say).
-  const wantsNationwide = /^(all|can|onl|any)/i.test(cityQuery.trim());
-  const suggestions = [...(wantsNationwide ? [NATIONWIDE] : []), ...searchCities(cityQuery)].filter((c) => !cities.includes(c));
   const touch = () => {
     setSaved(false);
     setError(null);
   };
-
-  function addCity(city: string) {
-    setCities((list) => [...list, city]);
-    setCityQuery("");
-    touch();
-  }
 
   async function save() {
     const cleanName = name.trim().replace(/\s+/g, " ");
@@ -267,52 +255,17 @@ function DetailsForm({ provider, isAdmin, children }: { provider: Provider; isAd
           }}
         />
       </div>
-      <div className="field" style={{ position: "relative" }}>
-        <label htmlFor="edit-city">Cities you work in</label>
-        <div className="chip-row" style={{ flexWrap: "wrap" }}>
-          {cities.map((c) => (
-            <span key={cityLabel(c)} className="chip" style={{ cursor: "default", paddingRight: 6 }}>
-              {c}
-              <button
-                type="button"
-                className="chip-x"
-                aria-label={`Remove ${cityLabel(c)}`}
-                onClick={() => {
-                  setCities((list) => list.filter((x) => x !== c));
-                  touch();
-                }}
-              >
-                <X size={15} />
-              </button>
-            </span>
-          ))}
-        </div>
-        {cities.length < MAX_CITIES && (
-          <input
-            id="edit-city"
-            className="input"
-            placeholder="Add a city"
-            autoComplete="off"
-            value={cityQuery}
-            onChange={(e) => setCityQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && suggestions.length > 0) {
-                e.preventDefault();
-                addCity(suggestions[0]);
-              }
-            }}
-          />
-        )}
-        {suggestions.length > 0 && (
-          <div className="suggest">
-            {suggestions.map((c) => (
-              <button key={cityLabel(c)} type="button" className="list-row" style={{ padding: "10px 14px", minHeight: 44 }} onClick={() => addCity(c)}>
-                {c}
-              </button>
-            ))}
-          </div>
-        )}
-        <span className="hint">Your listing shows up in searches for each of these.</span>
+      <div className="field">
+        <label htmlFor="edit-city">Where you work</label>
+        <AreaPicker
+          id="edit-city"
+          value={cities}
+          onChange={(next) => {
+            setCities(next);
+            touch();
+          }}
+        />
+        <span className="hint">Cities, a whole province, or all of Canada if you work online. Your listing shows to people browsing any of them.</span>
       </div>
       <div className="field">
         <label htmlFor="edit-responds">How quickly you usually respond</label>

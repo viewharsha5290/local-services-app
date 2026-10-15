@@ -6,7 +6,8 @@ import { useApp } from "@/lib/store";
 import { useSheet } from "@/components/SheetProvider";
 import { StarPicker } from "@/components/Stars";
 import Link from "next/link";
-import { CANADIAN_CITIES, NATIONWIDE } from "@/lib/cities";
+import { CANADIAN_CITIES } from "@/lib/cities";
+import { AreaPicker } from "@/components/AreaPicker";
 import { cleanWebsite } from "@/lib/website";
 
 export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?: boolean }) {
@@ -17,18 +18,18 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
   // No default: filing someone under the first trade in the list by accident helps nobody.
   const [category, setCategory] = useState("");
   // Starts on the city being browsed, when there is one; someone browsing by postal code picks.
-  const [city, setCity] = useState(locationLabel && CANADIAN_CITIES.includes(locationLabel) ? locationLabel : "");
+  const [cities, setCities] = useState<string[]>(locationLabel && CANADIAN_CITIES.includes(locationLabel) ? [locationLabel] : []);
   const [phone, setPhone] = useState("");
   const [website, setWebsite] = useState("");
   const [rating, setRating] = useState(5);
   const [note, setNote] = useState("");
 
   const site = cleanWebsite(website);
-  const canSubmit = name.trim().length > 1 && note.trim().length > 3 && category !== "" && city !== "" && !site.error;
+  const canSubmit = name.trim().length > 1 && note.trim().length > 3 && category !== "" && cities.length > 0 && !site.error;
 
   async function submit() {
     if (!canSubmit) return;
-    const id = await addRecommendation({ name: name.trim(), category, city, phone: phone.trim(), website: site.link, rating, note: note.trim() });
+    const id = await addRecommendation({ name: name.trim(), category, cities, phone: phone.trim(), website: site.link, rating, note: note.trim() });
     close();
     if (navigateOnSubmit && id) router.push(`/provider/${id}`);
   }
@@ -64,19 +65,9 @@ export function RecommendSheet({ navigateOnSubmit = true }: { navigateOnSubmit?:
         </span>
       </div>
       <div className="field" style={{ marginBottom: 12 }}>
-        <label htmlFor="recommend-city">City they work in</label>
-        <select id="recommend-city" className="input" required value={city} onChange={(e) => setCity(e.target.value)}>
-          <option value="" disabled>
-            Choose a city
-          </option>
-          <option value={NATIONWIDE}>Online, all of Canada</option>
-          {CANADIAN_CITIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <span className="hint">People find listings by city, so this decides where they show up.</span>
+        <label htmlFor="recommend-city">Where they work</label>
+        <AreaPicker id="recommend-city" value={cities} onChange={setCities} />
+        <span className="hint">Add each city they cover, a whole province, or all of Canada if they work online. People find listings by city.</span>
       </div>
       <div className="field" style={{ marginBottom: 12 }}>
         <label>Phone number</label>

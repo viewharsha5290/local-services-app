@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 import { haversineKm } from "./distance";
 import { PHOTO_BUCKET, photoPath, photoUrl, prepareImage } from "./photos";
 import { DEFAULT_CATEGORIES } from "./categories";
-import { NATIONWIDE } from "./cities";
+import { areasCovering } from "./cities";
 import { AuthState, CategoryInfo, ClaimStatus, ContactMessage, ContactTopic, ContactEvent, ContactMethod, GoogleReview, ListingPost, ListingStats, CoverCrop, PendingAction, PhotoCredit, PendingClaim, Provider, Review } from "./types";
 
 const LOCAL_KEY = "lsapp_local_v3";
@@ -15,8 +15,9 @@ const FOLLOW_UP_DELAY_MS = 1000 * 60 * 60 * 48;
 interface RecommendInput {
   name: string;
   category: Provider["category"];
-  /** The city the business works in. Listings are found by city, so one without is never seen. */
-  city: string;
+  /** Where the business works: cities, whole provinces or all of Canada (lib/cities.ts). Listings
+   * are found by city, so one with none is never seen. */
+  cities: string[];
   /** Its website or social page, already cleaned (lib/website.ts), or null. */
   website: string | null;
   phone: string;
@@ -331,8 +332,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let query = supabase.from("providers").select("*, reviews:reviews_public(*)").order("created_at", { ascending: true });
     // Built by hand rather than `.contains("cities", [cityFilter])`: supabase-js serializes that
     // as an unquoted `{Toronto, ON}`, which Postgres parses as two elements and never matches.
-    // Listings that serve all of Canada show in every city.
-    if (cityFilter) query = query.filter("cities", "ov", `{"${cityFilter.replace(/["\\]/g, "\\$&")}","${NATIONWIDE}"}`);
+    // Listings that serve the whole province, or all of Canada, show in every city they cover.
+    if (cityFilter) query = query.filter("cities", "ov", `{${areasCovering(cityFilter).map((a) => `"${a.replace(/["\\]/g, "\\$&")}"`).join(",")}}`);
     const { data, error } = await query;
     if (!error && data) setProvidersBase(data.map(mapProviderRow));
   }, []);
@@ -920,7 +921,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const phoneDisplay = tenDigit ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : input.phone || null;
       const { data: providerRow } = await supabase
         .from("providers")
-        .insert({ name: input.name, category: input.category, phone, phone_display: phoneDisplay, website: input.website, recommend_count: 1, added_by: auth.id, cities: [input.city] })
+        .insert({ name: input.name, category: input.category, phone, phone_display: phoneDisplay, website: input.website, recommend_count: 1, added_by: auth.id, cities: input.cities })
         .select()
         .single();
       if (!providerRow) return "";

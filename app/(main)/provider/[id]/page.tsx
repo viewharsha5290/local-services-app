@@ -18,7 +18,7 @@ import { useSheet } from "@/components/SheetProvider";
 import { ContactSheet } from "@/components/sheets/ContactSheet";
 import { DeleteReviewSheet, WriteReviewSheet } from "@/components/sheets/WriteReviewSheet";
 import { timeAgo } from "@/lib/time";
-import { NATIONWIDE } from "@/lib/cities";
+import { isRegion, regionPhrase } from "@/lib/cities";
 
 function initialsOf(name: string) {
   return name
@@ -44,9 +44,9 @@ function siteLink(website?: string) {
   }
 }
 
-/** The cities a listing names, without the all-of-Canada marker (that is shown as its own phrase). */
+/** The cities a listing names, without the province and all-of-Canada markers (shown as a phrase). */
 function cityNames(cities: string[]) {
-  return cities.filter((c) => c !== NATIONWIDE).map((c) => c.split(",")[0]);
+  return cities.filter((c) => !isRegion(c)).map((c) => c.split(",")[0]);
 }
 
 export default function ProviderDetailPage() {
@@ -117,16 +117,16 @@ export default function ProviderDetailPage() {
 
   const saved = isSaved(provider.id);
   const serves = cityNames(provider.cities);
-  const nationwide = provider.cities.includes(NATIONWIDE);
-  // "Classes in Toronto", but "Classes · Online" (an area that isn’t a place) and "Clothing across Canada".
+  const across = regionPhrase(provider.cities);
+  // "Classes in Toronto", but "Classes · Online" (an area that isn’t a place) and "Clothing across Ontario".
   const placePhrase = provider.areaNote
     ? /^online/i.test(provider.areaNote)
       ? ` · ${provider.areaNote}`
       : ` in ${provider.areaNote}`
     : serves.length
       ? ` in ${serves[0]}`
-      : nationwide
-        ? " across Canada"
+      : across
+        ? ` ${across}`
         : "";
   // A photo copied from Google Maps is credited on the cover and kept out of "Their work".
   const coverCredit = provider.photos[0] ? provider.photoCredits?.[provider.photos[0]] : undefined;
@@ -251,7 +251,7 @@ export default function ProviderDetailPage() {
           <div className="inforow">
             <MapPin size={24} />
             <span>
-              <b>{nationwide ? (serves.length ? `Based in ${serves[0]}, works across Canada` : "Works across Canada") : serves.length ? `Works in ${serves.slice(0, 3).join(", ")}${serves.length > 3 ? ` and ${serves.length - 3} more` : ""}` : "Local to you"}</b>
+              <b>{across ? (serves.length ? `Based in ${serves[0]}, works ${across}` : `Works ${across}`) : serves.length ? `Works in ${serves.slice(0, 3).join(", ")}${serves.length > 3 ? ` and ${serves.length - 3} more` : ""}` : "Local to you"}</b>
               {(provider.areaNote || provider.distanceKm != null) && (
                 <>
                   <br />

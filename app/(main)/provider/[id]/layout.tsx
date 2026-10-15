@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_NAME, fetchListings } from "@/lib/site";
 import { photoUrl } from "@/lib/photos";
-import { NATIONWIDE } from "@/lib/cities";
+import { isRegion } from "@/lib/cities";
 
 interface ListingHead {
   name: string;
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const [listing] = await fetchListings<ListingHead>(`id=eq.${id}&select=name,category,area_note,cities,bio,photos`, 300);
   if (!listing) return {};
 
-  const city = listing.cities?.find((c) => c !== NATIONWIDE)?.split(",")[0];
+  const city = listing.cities?.find((c) => !isRegion(c))?.split(",")[0];
   const where = city ? ` in ${city}` : "";
   const title = `${listing.name} · ${listing.category}${where}`;
   const summary = listing.bio?.trim() || `${listing.name}: ${listing.category.toLowerCase()}${where}. Phone number, photos and neighbours' reviews on ${SITE_NAME}.`;

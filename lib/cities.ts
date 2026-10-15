@@ -84,6 +84,62 @@ export const CANADIAN_CITIES: string[] = [
  * city check accepts it; deliberately not in CANADIAN_CITIES, so nobody can browse “All of Canada”. */
 export const NATIONWIDE = "All of Canada, CA";
 
+const PROVINCES: Record<string, string> = {
+  ON: "Ontario",
+  QC: "Quebec",
+  BC: "British Columbia",
+  AB: "Alberta",
+  MB: "Manitoba",
+  SK: "Saskatchewan",
+  NS: "Nova Scotia",
+  NB: "New Brunswick",
+  NL: "Newfoundland and Labrador",
+  PE: "Prince Edward Island",
+  YT: "Yukon",
+  NT: "Northwest Territories",
+  NU: "Nunavut",
+};
+
+/** The marker for a business that serves a whole province, e.g. "All of Ontario, ON". Like
+ * NATIONWIDE, it is written like a city and is never offered as a place to browse. */
+export function provinceWide(code: string) {
+  return `All of ${PROVINCES[code]}, ${code}`;
+}
+
+/** True for "All of Canada" and the whole-province markers, as opposed to a real city. */
+export function isRegion(area: string) {
+  return area.startsWith("All of ");
+}
+
+/** How a listing’s area reads to people: "Hamilton, ON", "All of Ontario", "All of Canada". */
+export function areaLabel(area: string) {
+  return isRegion(area) ? area.split(",")[0] : area;
+}
+
+/** "across Canada", "across Ontario and Quebec": the regions in a listing’s areas, or null. */
+export function regionPhrase(areas: string[]) {
+  const regions = areas.filter(isRegion).map((a) => areaLabel(a).slice("All of ".length));
+  if (regions.includes("Canada")) return "across Canada";
+  return regions.length ? `across ${regions.join(" and ")}` : null;
+}
+
+/** Everything a listing could carry to show up for someone browsing this city. */
+export function areasCovering(city: string) {
+  const code = city.split(", ")[1];
+  return [city, ...(code && PROVINCES[code] ? [provinceWide(code)] : []), NATIONWIDE];
+}
+
+/** Suggestions for a listing’s areas: whole provinces and all of Canada first, then cities. */
+export function searchAreas(query: string, limit = 6): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const regions = Object.entries(PROVINCES)
+    .filter(([code, name]) => code.toLowerCase() === q || name.toLowerCase().startsWith(q) || (q.length >= 3 && name.toLowerCase().includes(q)))
+    .map(([code]) => provinceWide(code));
+  if (/^(all|can|onl|any|cou|nat)/.test(q)) regions.unshift(NATIONWIDE);
+  return [...regions, ...searchCities(query, limit)].slice(0, limit);
+}
+
 export function searchCities(query: string, limit = 6): string[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
