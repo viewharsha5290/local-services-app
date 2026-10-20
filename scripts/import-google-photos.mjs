@@ -62,15 +62,24 @@ if (args.remove) {
 const todo = inScope.filter((p) => !(p.photos?.length)).slice(0, args.limit);
 console.log(`${todo.length} Google-imported listings without a photo${args.dryRun ? " (dry run)" : ""}`);
 
+// Google allows 600 lookups a minute; past that it answers 429, so wait out the minute and retry.
+async function googleFetch(url, init) {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, init);
+    if (res.status !== 429 || attempt === 4) return res;
+    await new Promise((r) => setTimeout(r, 65_000));
+  }
+}
+
 async function photoFor(p) {
-  const details = await fetch(`${PLACES}/places/${encodeURIComponent(p.google_place_id)}`, { headers: { "X-Goog-Api-Key": key, "X-Goog-FieldMask": "photos" } });
+  const details = await googleFetch(`${PLACES}/places/${encodeURIComponent(p.google_place_id)}`, { headers: { "X-Goog-Api-Key": key, "X-Goog-FieldMask": "photos" } });
   if (!details.ok) throw new Error(`details ${details.status}`);
   const photo = (await details.json()).photos?.[0];
   if (!photo?.name) return null;
   const author = photo.authorAttributions?.[0];
   const credit = { source: "google", ...(author?.displayName ? { name: author.displayName } : {}), ...(author?.uri ? { uri: author.uri } : {}) };
   if (args.dryRun) return { credit };
-  const media = await fetch(`${PLACES}/${photo.name}/media?maxWidthPx=800`, { headers: { "X-Goog-Api-Key": key } });
+  const media = await googleFetch(`${PLACES}/${photo.name}/media?maxWidthPx=800`, { headers: { "X-Goog-Api-Key": key } });
   if (!media.ok) throw new Error(`photo ${media.status}`);
   const type = media.headers.get("content-type") ?? "";
   const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
