@@ -286,6 +286,22 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <circle className="a-sun" cx="132" cy="18" r="3" />
     </>
   ),
+  // Tire services: a winter tire, with a snowflake.
+  tire: (
+    <>
+      <ellipse className="a-ground" cx="66" cy="132" rx="50" ry="6" />
+      <circle className="a-shape" cx="66" cy="76" r="54" />
+      {Array.from({ length: 12 }).map((_, i) => (
+        <rect key={i} className="a-shape2" x="62" y="25" width="8" height="10" rx="2" transform={`rotate(${i * 30} 66 76)`} />
+      ))}
+      <circle className="a-light" cx="66" cy="76" r="27" />
+      {[0, 72, 144, 216, 288].map((d) => (
+        <rect key={d} className="a-shape2" x="63" y="53" width="6" height="18" rx="3" transform={`rotate(${d} 66 76)`} />
+      ))}
+      <circle className="a-pop" cx="66" cy="76" r="9" />
+      <path className="a-stroke a-ray" strokeWidth="4" d="M126 8v26M113 21h26M117 12l18 18M135 12l-18 18" />
+    </>
+  ),
   // Flowers and pooja items: a marigold garland.
   garland: (
     <>

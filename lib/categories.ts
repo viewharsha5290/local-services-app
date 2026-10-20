@@ -41,6 +41,7 @@ export const ART_OPTIONS: { key: string; label: string }[] = [
   { key: "candle", label: "Candle" },
   { key: "tiffin", label: "Tiffin carrier" },
   { key: "spray", label: "Spray bottle" },
+  { key: "tire", label: "Winter tire" },
   { key: "diya", label: "Diya lamp" },
   { key: "garland", label: "Marigold garland" },
   { key: "bulb", label: "Light bulb" },
