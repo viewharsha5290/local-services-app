@@ -270,6 +270,22 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <rect className="a-shape" x="16" y="56" width="108" height="6" rx="3" />
     </>
   ),
+  // Cleaning services: a spray bottle mid-spritz.
+  spray: (
+    <>
+      <ellipse className="a-ground" cx="66" cy="130" rx="40" ry="6" />
+      <rect className="a-pop" x="38" y="60" width="54" height="68" rx="12" />
+      <rect className="a-light" x="47" y="78" width="36" height="30" rx="5" />
+      <rect className="a-shape2" x="52" y="46" width="26" height="16" rx="3" />
+      <rect className="a-shape" x="42" y="24" width="48" height="24" rx="7" />
+      <rect className="a-shape" x="86" y="28" width="20" height="10" rx="3" />
+      <path className="a-shape2" d="M58 48q-9 6-11 19l9 2q2-11 9-15z" />
+      <circle className="a-sun" cx="118" cy="24" r="5" />
+      <circle className="a-sun" cx="128" cy="36" r="3.5" />
+      <circle className="a-sun" cx="120" cy="46" r="4" />
+      <circle className="a-sun" cx="132" cy="18" r="3" />
+    </>
+  ),
   // Flowers and pooja items: a marigold garland.
   garland: (
     <>
