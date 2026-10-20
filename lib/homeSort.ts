@@ -3,15 +3,16 @@
 export type SortKey = "active" | "rated" | "near" | "new" | "category";
 
 export const SORTS: { key: SortKey; label: string }[] = [
+  // not an order but a different view: a short section for each trade. The default, now that
+  // every trade has enough listings to fill its section.
+  { key: "category", label: "By category" },
   { key: "active", label: "Recently active" },
   { key: "rated", label: "Top rated" },
   { key: "near", label: "Nearby" },
   { key: "new", label: "Newest" },
-  // not an order but a different view: a short section for each trade
-  { key: "category", label: "By category" },
 ];
 
-let current: SortKey = "active";
+let current: SortKey = "category";
 
 export const getHomeSort = () => current;
 
