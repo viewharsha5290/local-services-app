@@ -49,6 +49,7 @@ const CATEGORY_QUERIES = {
   "Flowers & Pooja Items": { text: ["indian pooja items store", "indian grocery store", "florist", "flower garland mala", "wedding flowers"] },
   Classes: { text: ["indian classical music classes", "bollywood bhangra dance classes", "music lessons", "dance studio classes", "tutoring centre", "coding classes for kids", "art classes for kids", "hindi punjabi tamil language classes"] },
   "Cleaning Services": { text: ["house cleaning service", "commercial cleaning service", "carpet cleaning"] },
+  "Tire Services": { text: ["tire shop", "winter tire changeover", "tire swap service", "mobile tire service"] },
 };
 
 const FIELD_MASK = [
