@@ -50,7 +50,7 @@ const CATEGORY_QUERIES = {
   Classes: { text: ["indian classical music classes", "bollywood bhangra dance classes", "music lessons", "dance studio classes", "tutoring centre", "coding classes for kids", "art classes for kids", "hindi punjabi tamil language classes"] },
   "Cleaning Services": { text: ["house cleaning service", "commercial cleaning service", "carpet cleaning"] },
   "Tire Services": { text: ["tire shop", "winter tire changeover", "tire swap service", "mobile tire service"] },
-  "Lawn Care & Snow Removal": { text: ["snow removal service", "snow plowing residential", "lawn care service", "lawn mowing service"] },
+  "Lawn Care & Snow Removal": { text: ["snow removal service", "snow plowing residential", "lawn care service", "lawn mowing service", "landscaping and snow removal", "yard maintenance service", "driveway snow plowing"] },
 };
 
 const FIELD_MASK = [

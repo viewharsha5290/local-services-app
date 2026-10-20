@@ -302,6 +302,21 @@ const OBJECTS: Record<string, React.ReactNode> = {
       <path className="a-stroke a-ray" strokeWidth="4" d="M126 8v26M113 21h26M117 12l18 18M135 12l-18 18" />
     </>
   ),
+  // Lawn care and snow removal: a snow shovel in the grass, for both seasons.
+  shovel: (
+    <>
+      <ellipse className="a-ground" cx="70" cy="131" rx="56" ry="6" />
+      <g transform="rotate(-18 70 70)">
+        <rect className="a-shape" x="64" y="14" width="11" height="78" rx="5" />
+        <rect className="a-shape2" x="53" y="8" width="33" height="11" rx="5.5" />
+        <path className="a-pop" d="M38 88h64l-7 38H45z" />
+        <rect className="a-shape2" x="38" y="85" width="64" height="8" rx="4" />
+        <path className="a-light" d="M46 93q8-9 16-2 7-8 15 0 8-7 17 2z" />
+      </g>
+      <path className="a-sun" d="M104 130l5-22 4 22zM113 130l6-28 5 28zM123 130l4-18 4 18z" />
+      <path className="a-stroke a-ray" strokeWidth="4" d="M18 10v22M7 21h22M10 13l16 16M26 13l-16 16" />
+    </>
+  ),
   // Flowers and pooja items: a marigold garland.
   garland: (
     <>
