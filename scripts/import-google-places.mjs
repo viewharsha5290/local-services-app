@@ -9,6 +9,8 @@
 //   --city "<City, PR>"   repeatable; must match lib/cities.ts exactly. Default: Toronto, ON
 //   --category <name>     repeatable; one of lib/types.ts CATEGORIES. Default: all
 //   --pages <1-3>         result pages per query (20 results each). Default: 1
+//   --only <file>         keep only businesses whose Google name is a line in this file (after a
+//                         --dry-run, to drop results that aren't really in the trade)
 //   --refresh             also update businesses already listed (default: only add new ones, so a
 //                         listing someone has since corrected or re-categorised is left alone)
 //   --include-no-phone    keep businesses Google has no phone number for (skipped by default,
@@ -42,7 +44,7 @@ const CATEGORY_QUERIES = {
   Beauty: { text: "beauty salon eyebrow threading", type: "beauty_salon" },
   Tailoring: { text: "tailor alterations" },
   "Driving Schools": { text: "driving school" },
-  "Tiffin & Catering": { text: "indian tiffin service catering" },
+  "Tiffin & Catering": { text: ["indian tiffin service", "tiffin service", "indian catering", "catering service", "home cooked meal delivery"] },
   "Party Rentals": { text: "party rentals" },
   "Flowers & Pooja Items": { text: "indian pooja store" },
   Classes: { text: "music dance classes for kids" },
@@ -64,7 +66,7 @@ const FIELD_MASK = [
 
 // ── args ────────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const args = { cities: [], categories: [], pages: 1, dryRun: false, includeNoPhone: false, refresh: false };
+  const args = { cities: [], categories: [], pages: 1, dryRun: false, includeNoPhone: false, refresh: false, only: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--city") args.cities.push(argv[++i]);
@@ -73,6 +75,7 @@ function parseArgs(argv) {
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--include-no-phone") args.includeNoPhone = true;
     else if (a === "--refresh") args.refresh = true;
+    else if (a === "--only") args.only = new Set(readFileSync(argv[++i], "utf8").split(/\r?\n/).map((l) => l.trim()).filter(Boolean));
     else fail(`Unknown argument: ${a}`);
   }
   if (!args.cities.length) args.cities = ["Toronto, ON"];
@@ -105,18 +108,23 @@ async function searchText(apiKey, body) {
   return json;
 }
 
-async function searchCategoryInCity(apiKey, category, city, pages) {
-  const { text, type } = CATEGORY_QUERIES[category];
-  const body = { textQuery: `${text} in ${city}, Canada`, regionCode: "CA", languageCode: "en", pageSize: 20 };
-  if (type) Object.assign(body, { includedType: type, strictTypeFiltering: true });
+// A category's `text` is one search, or several (for trades Google files under different words);
+// results from all of them are merged.
+const searchTexts = (category) => [CATEGORY_QUERIES[category].text].flat();
 
+async function searchCategoryInCity(apiKey, category, city, pages) {
+  const { type } = CATEGORY_QUERIES[category];
   const places = [];
-  let pageToken;
-  for (let page = 0; page < pages; page++) {
-    const json = await searchText(apiKey, pageToken ? { ...body, pageToken } : body);
-    places.push(...(json.places ?? []));
-    pageToken = json.nextPageToken;
-    if (!pageToken) break;
+  for (const text of searchTexts(category)) {
+    const body = { textQuery: `${text} in ${city}, Canada`, regionCode: "CA", languageCode: "en", pageSize: 20 };
+    if (type) Object.assign(body, { includedType: type, strictTypeFiltering: true });
+    let pageToken;
+    for (let page = 0; page < pages; page++) {
+      const json = await searchText(apiKey, pageToken ? { ...body, pageToken } : body);
+      places.push(...(json.places ?? []));
+      pageToken = json.nextPageToken;
+      if (!pageToken) break;
+    }
   }
   return places;
 }
@@ -130,7 +138,7 @@ function component(place, type) {
 const FILLER = new Set(["the", "and", "&", "services", "service", "emergency", "24", "7", "24/7", "local", "best", "near", "me", "in", "of", "inc", "ltd", "co"]);
 function isKeywordOnlyName(name, category, city) {
   const stem = (w) => w.replace(/(ing|ers|er|s)$/, "");
-  const trade = new Set(`${CATEGORY_QUERIES[category].text} ${category}`.toLowerCase().split(/\W+/).filter(Boolean).map(stem));
+  const trade = new Set(`${searchTexts(category).join(" ")} ${category}`.toLowerCase().split(/\W+/).filter(Boolean).map(stem));
   const place = new Set(city.split(",")[0].toLowerCase().split(/\s+/));
   const words = name.toLowerCase().split(/[^a-z0-9&/]+/).filter(Boolean);
   return words.every((w) => FILLER.has(w) || place.has(w) || trade.has(stem(w)));
@@ -206,6 +214,7 @@ async function main() {
           continue;
         }
         const row = toProviderRow(place, category, city, knownCities);
+        if (args.only && !args.only.has(row.name)) continue;
         if (isKeywordOnlyName(row.name, category, city)) {
           skippedKeyword++;
           continue;
