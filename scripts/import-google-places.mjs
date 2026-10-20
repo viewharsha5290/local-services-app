@@ -36,7 +36,7 @@ const CATEGORY_QUERIES = {
   "Priests & Places of Worship": { text: "place of worship" },
   Electrician: { text: "electrician", type: "electrician" },
   Plumber: { text: "plumber", type: "plumber" },
-  Renovations: { text: "home renovation contractor", type: "general_contractor" },
+  Renovations: { text: "home renovation contractor" },
   Mortgages: { text: "mortgage broker" },
   Cakes: { text: "custom cakes" },
   Beauty: { text: "beauty salon eyebrow threading", type: "beauty_salon" },
@@ -194,6 +194,8 @@ async function main() {
   let skippedClosed = 0;
   let skippedNoPhone = 0;
   let skippedKeyword = 0;
+  let skippedSamePhone = 0;
+  const byPhone = new Map();
   for (const city of args.cities) {
     for (const category of args.categories) {
       const places = await searchCategoryInCity(apiKey, category, city, args.pages);
@@ -214,14 +216,21 @@ async function main() {
         }
         const existing = byPlaceId.get(row.google_place_id);
         if (existing) existing.cities = [...new Set([...existing.cities, ...row.cities])];
-        else byPlaceId.set(row.google_place_id, row);
+        else if (row.phone && byPhone.has(digitsOnly(row.phone))) {
+          // one business, two Google pages ("Newfore Inc." and "Newfore - Home Renovation Contractor")
+          skippedSamePhone++;
+          continue;
+        } else {
+          byPlaceId.set(row.google_place_id, row);
+          if (row.phone) byPhone.set(digitsOnly(row.phone), row);
+        }
         kept++;
       }
       console.log(`  ${city.padEnd(20)} ${category.padEnd(12)} ${String(places.length).padStart(3)} found, ${kept} kept`);
     }
   }
   const rows = [...byPlaceId.values()];
-  console.log(`\n${rows.length} unique businesses (skipped ${skippedClosed} closed, ${skippedNoPhone} without a phone number, ${skippedKeyword} keyword-only names).`);
+  console.log(`\n${rows.length} unique businesses (skipped ${skippedClosed} closed, ${skippedNoPhone} without a phone number, ${skippedKeyword} keyword-only names, ${skippedSamePhone} repeats of the same phone number).`);
 
   if (args.dryRun) {
     for (const r of rows) console.log(`  [${r.category}] ${r.name} — ${r.phone_display ?? "no phone"} — ${r.area_note ?? "?"} — ${r.cities.join(" / ")}`);
@@ -236,6 +245,7 @@ async function main() {
 
   const existing = await fetchAll(supabase, "id, google_place_id, phone, cities, lat, lng");
   const existingByPlaceId = new Map(existing.filter((r) => r.google_place_id).map((r) => [r.google_place_id, r]));
+  const linkedPhones = new Set(existing.filter((r) => r.google_place_id && r.phone).map((r) => digitsOnly(r.phone)));
   const unlinkedByPhone = new Map(existing.filter((r) => !r.google_place_id && r.phone).map((r) => [digitsOnly(r.phone), r]));
   const syncedAt = new Date().toISOString();
 
@@ -244,6 +254,8 @@ async function main() {
   for (const row of rows) {
     const prior = existingByPlaceId.get(row.google_place_id);
     if (prior && !args.refresh) continue;
+    // already listed from another Google page or another trade, under the same phone number
+    if (!prior && row.phone && linkedPhones.has(digitsOnly(row.phone))) continue;
     const mergedCities = [...new Set([...(prior?.cities ?? []), ...row.cities])];
     const seedMatch = !prior && row.phone ? unlinkedByPhone.get(digitsOnly(row.phone)) : undefined;
 
