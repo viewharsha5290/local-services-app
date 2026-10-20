@@ -70,7 +70,7 @@ async function photoFor(p) {
   const author = photo.authorAttributions?.[0];
   const credit = { source: "google", ...(author?.displayName ? { name: author.displayName } : {}), ...(author?.uri ? { uri: author.uri } : {}) };
   if (args.dryRun) return { credit };
-  const media = await fetch(`${PLACES}/${photo.name}/media?maxWidthPx=1200`, { headers: { "X-Goog-Api-Key": key } });
+  const media = await fetch(`${PLACES}/${photo.name}/media?maxWidthPx=800`, { headers: { "X-Goog-Api-Key": key } });
   if (!media.ok) throw new Error(`photo ${media.status}`);
   const type = media.headers.get("content-type") ?? "";
   const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
