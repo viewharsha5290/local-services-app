@@ -35,8 +35,14 @@ const key = process.env.GOOGLE_PLACES_API_KEY;
 if (!key && !args.remove) throw new Error("GOOGLE_PLACES_API_KEY is not set.");
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
-const { data: all, error } = await supabase.from("providers").select("id,name,cities,google_place_id,photos,photo_credits,activity_at").not("google_place_id", "is", null).limit(5000);
-if (error) throw new Error(`Couldn't read listings (is migration 020 applied?): ${error.message}`);
+// The database hands back at most 1,000 rows a request, so read in pages.
+const all = [];
+for (let from = 0; ; from += 1000) {
+  const { data, error } = await supabase.from("providers").select("id,name,cities,google_place_id,photos,photo_credits,activity_at").not("google_place_id", "is", null).order("id").range(from, from + 999);
+  if (error) throw new Error(`Couldn't read listings (is migration 020 applied?): ${error.message}`);
+  all.push(...data);
+  if (data.length < 1000) break;
+}
 const inScope = all.filter((p) => !args.cities.length || p.cities?.some((c) => args.cities.includes(c)));
 
 if (args.remove) {

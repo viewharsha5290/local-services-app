@@ -329,13 +329,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<CategoryInfo[]>(DEFAULT_CATEGORIES);
 
   const fetchProviders = useCallback(async (cityFilter?: string | null) => {
-    let query = supabase.from("providers").select("*, reviews:reviews_public(*)").order("created_at", { ascending: true });
     // Built by hand rather than `.contains("cities", [cityFilter])`: supabase-js serializes that
     // as an unquoted `{Toronto, ON}`, which Postgres parses as two elements and never matches.
     // Listings that serve the whole province, or all of Canada, show in every city they cover.
-    if (cityFilter) query = query.filter("cities", "ov", `{${areasCovering(cityFilter).map((a) => `"${a.replace(/["\\]/g, "\\$&")}"`).join(",")}}`);
-    const { data, error } = await query;
-    if (!error && data) setProvidersBase(data.map(mapProviderRow));
+    const areas = cityFilter ? `{${areasCovering(cityFilter).map((a) => `"${a.replace(/["\\]/g, "\\$&")}"`).join(",")}}` : null;
+    // The database hands back at most 1,000 rows a request, so the directory is read in pages.
+    const PAGE = 1000;
+    const rows: Parameters<typeof mapProviderRow>[0][] = [];
+    for (let from = 0; ; from += PAGE) {
+      let query = supabase.from("providers").select("*, reviews:reviews_public(*)").order("created_at", { ascending: true }).order("id").range(from, from + PAGE - 1);
+      if (areas) query = query.filter("cities", "ov", areas);
+      const { data, error } = await query;
+      if (error || !data) return;
+      rows.push(...data);
+      if (data.length < PAGE) break;
+    }
+    setProvidersBase(rows.map(mapProviderRow));
   }, []);
 
   const loadCategories = useCallback(async () => {
