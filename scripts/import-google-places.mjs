@@ -9,6 +9,8 @@
 //   --city "<City, PR>"   repeatable; must match lib/cities.ts exactly. Default: Toronto, ON
 //   --category <name>     repeatable; one of lib/types.ts CATEGORIES. Default: all
 //   --pages <1-3>         result pages per query (20 results each). Default: 1
+//   --refresh             also update businesses already listed (default: only add new ones, so a
+//                         listing someone has since corrected or re-categorised is left alone)
 //   --include-no-phone    keep businesses Google has no phone number for (skipped by default,
 //                         since calling/messaging is the app's core action)
 //   --dry-run             print what would be written; needs only GOOGLE_PLACES_API_KEY
@@ -17,8 +19,8 @@
 // The service-role key bypasses Row Level Security — it's used only by this local script and
 // must never get a NEXT_PUBLIC_ prefix.
 //
-// Idempotent: rows are keyed on google_place_id, so re-running refreshes existing imports
-// instead of duplicating them. A hand-seeded row (supabase/seed.sql) with the same phone
+// Idempotent: rows are keyed on google_place_id, so re-running never duplicates; with --refresh
+// it updates existing imports. A hand-seeded row (supabase/seed.sql) with the same phone
 // number is linked to its Google place rather than duplicated, and keeps its own name/bio.
 // Never touches verified / claimed / recommend_count or any reviews.
 
@@ -33,6 +35,17 @@ const CATEGORY_QUERIES = {
   // No includedType: Places (New) has only per-faith types (church, mosque, synagogue, hindu_temple).
   "Priests & Places of Worship": { text: "place of worship" },
   Electrician: { text: "electrician", type: "electrician" },
+  Plumber: { text: "plumber", type: "plumber" },
+  Renovations: { text: "home renovation contractor", type: "general_contractor" },
+  Mortgages: { text: "mortgage broker" },
+  Cakes: { text: "custom cakes" },
+  Beauty: { text: "beauty salon eyebrow threading", type: "beauty_salon" },
+  Tailoring: { text: "tailor alterations" },
+  "Driving Schools": { text: "driving school" },
+  "Tiffin & Catering": { text: "indian tiffin service catering" },
+  "Party Rentals": { text: "party rentals" },
+  "Flowers & Pooja Items": { text: "indian pooja store" },
+  Classes: { text: "music dance classes for kids" },
 };
 
 const FIELD_MASK = [
@@ -51,7 +64,7 @@ const FIELD_MASK = [
 
 // ── args ────────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const args = { cities: [], categories: [], pages: 1, dryRun: false, includeNoPhone: false };
+  const args = { cities: [], categories: [], pages: 1, dryRun: false, includeNoPhone: false, refresh: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--city") args.cities.push(argv[++i]);
@@ -59,6 +72,7 @@ function parseArgs(argv) {
     else if (a === "--pages") args.pages = Number(argv[++i]);
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "--include-no-phone") args.includeNoPhone = true;
+    else if (a === "--refresh") args.refresh = true;
     else fail(`Unknown argument: ${a}`);
   }
   if (!args.cities.length) args.cities = ["Toronto, ON"];
@@ -109,6 +123,17 @@ async function searchCategoryInCity(apiKey, category, city, pages) {
 
 function component(place, type) {
   return place.addressComponents?.find((c) => c.types?.includes(type));
+}
+
+// Lead-generation pages pose as businesses with names made only of the trade and the city
+// ("EMERGENCY PLUMBER Hamilton", "Plumbing Services Hamilton"). A real business has a name of its own.
+const FILLER = new Set(["the", "and", "&", "services", "service", "emergency", "24", "7", "24/7", "local", "best", "near", "me", "in", "of", "inc", "ltd", "co"]);
+function isKeywordOnlyName(name, category, city) {
+  const stem = (w) => w.replace(/(ing|ers|er|s)$/, "");
+  const trade = new Set(`${CATEGORY_QUERIES[category].text} ${category}`.toLowerCase().split(/\W+/).filter(Boolean).map(stem));
+  const place = new Set(city.split(",")[0].toLowerCase().split(/\s+/));
+  const words = name.toLowerCase().split(/[^a-z0-9&/]+/).filter(Boolean);
+  return words.every((w) => FILLER.has(w) || place.has(w) || trade.has(stem(w)));
 }
 
 function digitsOnly(phone) {
@@ -168,6 +193,7 @@ async function main() {
   const byPlaceId = new Map();
   let skippedClosed = 0;
   let skippedNoPhone = 0;
+  let skippedKeyword = 0;
   for (const city of args.cities) {
     for (const category of args.categories) {
       const places = await searchCategoryInCity(apiKey, category, city, args.pages);
@@ -178,6 +204,10 @@ async function main() {
           continue;
         }
         const row = toProviderRow(place, category, city, knownCities);
+        if (isKeywordOnlyName(row.name, category, city)) {
+          skippedKeyword++;
+          continue;
+        }
         if (!row.phone && !args.includeNoPhone) {
           skippedNoPhone++;
           continue;
@@ -191,7 +221,7 @@ async function main() {
     }
   }
   const rows = [...byPlaceId.values()];
-  console.log(`\n${rows.length} unique businesses (skipped ${skippedClosed} closed, ${skippedNoPhone} without a phone number).`);
+  console.log(`\n${rows.length} unique businesses (skipped ${skippedClosed} closed, ${skippedNoPhone} without a phone number, ${skippedKeyword} keyword-only names).`);
 
   if (args.dryRun) {
     for (const r of rows) console.log(`  [${r.category}] ${r.name} — ${r.phone_display ?? "no phone"} — ${r.area_note ?? "?"} — ${r.cities.join(" / ")}`);
@@ -213,6 +243,7 @@ async function main() {
   let linked = 0;
   for (const row of rows) {
     const prior = existingByPlaceId.get(row.google_place_id);
+    if (prior && !args.refresh) continue;
     const mergedCities = [...new Set([...(prior?.cities ?? []), ...row.cities])];
     const seedMatch = !prior && row.phone ? unlinkedByPhone.get(digitsOnly(row.phone)) : undefined;
 
