@@ -45,7 +45,7 @@ const CATEGORY_QUERIES = {
   Tailoring: { text: "tailor alterations" },
   "Driving Schools": { text: "driving school" },
   "Tiffin & Catering": { text: ["indian tiffin service", "tiffin service", "indian catering", "catering service", "home cooked meal delivery"] },
-  "Party Rentals": { text: "party rentals" },
+  "Party Rentals": { text: ["party rentals", "event rentals tents tables chairs", "wedding decor rentals", "bouncy castle rentals"] },
   "Flowers & Pooja Items": { text: "indian pooja store" },
   Classes: { text: "music dance classes for kids" },
   "Cleaning Services": { text: ["house cleaning service", "commercial cleaning service", "carpet cleaning"] },
