@@ -46,7 +46,7 @@ const CATEGORY_QUERIES = {
   "Driving Schools": { text: "driving school" },
   "Tiffin & Catering": { text: ["indian tiffin service", "tiffin service", "indian catering", "catering service", "home cooked meal delivery"] },
   "Party Rentals": { text: ["party rentals", "event rentals tents tables chairs", "wedding decor rentals", "bouncy castle rentals"] },
-  "Flowers & Pooja Items": { text: "indian pooja store" },
+  "Flowers & Pooja Items": { text: ["indian pooja items store", "indian grocery store", "florist", "flower garland mala", "wedding flowers"] },
   Classes: { text: ["indian classical music classes", "bollywood bhangra dance classes", "music lessons", "dance studio classes", "tutoring centre", "coding classes for kids", "art classes for kids", "hindi punjabi tamil language classes"] },
   "Cleaning Services": { text: ["house cleaning service", "commercial cleaning service", "carpet cleaning"] },
 };
