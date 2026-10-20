@@ -24,6 +24,10 @@ const UNSPLASH_IDS: Record<string, string> = {
   lplate: "photo-1532004252750-b411a84c8a41",
   toran: "photo-1577083753695-e010191bacb5",
   knee: "photo-1649751361457-01d3a696c7e6",
+  tiffin: "photo-1781747835478-a9c3bab5a670",
+  spray: "photo-1758273238415-01ec03d9ef27",
+  tire: "photo-1764699186616-8f707281e4f3",
+  shovel: "photo-1483385573908-0a2108937c4a",
 };
 
 /** The card photo for a cover drawing, if it has one. */
