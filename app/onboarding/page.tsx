@@ -6,6 +6,7 @@ import { Crosshair } from "lucide-react";
 import { useApp } from "@/lib/store";
 import { HOME_POSTAL_CODE } from "@/lib/data";
 import { isValidPostalCode, normalizePostalCode } from "@/lib/postalCode";
+import { currentPosition, postalCodePosition } from "@/lib/locate";
 import { CANADIAN_CITIES, searchCities } from "@/lib/cities";
 import { BrandMark } from "@/components/BrandMark";
 
@@ -37,7 +38,7 @@ export default function OnboardingPage() {
     setError(null);
   }
 
-  function submitPostal() {
+  async function submitPostal() {
     const trimmed = code.trim();
     if (!trimmed) {
       setLocation({ scope: "postal", postalCode: HOME_POSTAL_CODE });
@@ -49,7 +50,11 @@ export default function OnboardingPage() {
       return;
     }
     setError(null);
-    setLocation({ scope: "postal", postalCode: normalizePostalCode(trimmed) });
+    setLocating(true);
+    // the code's position lets "Nearby" order by distance; without it the code is still saved
+    const coords = await postalCodePosition(trimmed).catch(() => undefined);
+    setLocating(false);
+    setLocation({ scope: "postal", postalCode: normalizePostalCode(trimmed), coords });
     router.push(nextPath());
   }
 
@@ -86,18 +91,18 @@ export default function OnboardingPage() {
     else submitCity();
   }
 
-  function useCurrentLocation() {
-    if (!navigator.geolocation) return;
+  async function useCurrentLocation() {
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        setLocation({ scope: "postal", postalCode: HOME_POSTAL_CODE, coords: { lat: position.coords.latitude, lng: position.coords.longitude } });
-        router.push(nextPath());
-      },
-      () => setLocating(false),
-      { timeout: 8000 }
-    );
+    setError(null);
+    try {
+      const coords = await currentPosition();
+      setLocation({ scope: "postal", postalCode: HOME_POSTAL_CODE, coords });
+      router.push(nextPath());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn’t get your location.");
+    } finally {
+      setLocating(false);
+    }
   }
 
   return (

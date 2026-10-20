@@ -113,6 +113,8 @@ interface AppContextValue {
   pendingAction: PendingAction;
   trustStats: TrustStats;
   setLocation: (input: SetLocationInput) => void;
+  /** Remembers where the visitor is, for distances, without changing the place being browsed. */
+  setUserCoords: (coords: Coords | null) => void;
   /** Emails a sign-in link + code. Pass `name` to create an account (sign-up); without it only
    * existing accounts are emailed, and `noAccount` reports that the address isn't registered. */
   signInWithEmail: (email: string, name?: string) => Promise<{ error?: string; noAccount?: boolean }>;
@@ -603,6 +605,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const setUserCoords = useCallback((coords: Coords | null) => setLocal((l) => ({ ...l, userCoords: coords })), []);
+
   const submitClaim = useCallback(
     async (input: ClaimInput) => {
       if (auth.status !== "signedIn" || !auth.id) return { error: "Sign in to claim a listing." };
@@ -1029,6 +1033,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     pendingAction: local.pendingAction,
     trustStats,
     setLocation,
+    setUserCoords,
     signInWithEmail,
     verifyEmailCode,
     signOut,

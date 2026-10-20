@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { NearMePrompt } from "@/components/NearMePrompt";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, Palette, Search, SearchX, User } from "lucide-react";
@@ -46,7 +47,7 @@ const PER_CATEGORY = 4;
 const time = (iso: string) => new Date(iso).getTime();
 
 export default function SearchHomePage() {
-  const { auth, providers, categories, pendingFollowUp, resolveFollowUp, locationLabel, fetchRecentPosts } = useApp();
+  const { auth, providers, categories, pendingFollowUp, resolveFollowUp, locationLabel, fetchRecentPosts, setUserCoords } = useApp();
   const router = useRouter();
   const requireAuth = useRequireAuth();
   const { open } = useSheet();
@@ -285,10 +286,16 @@ export default function SearchHomePage() {
               </button>
             ))}
           </div>
-          {sort === "near" && !hasDistance ? (
+          {sort === "near" && hasDistance && (
             <p className="sortnote">
-              To order by distance we need to know where you are. <Link href="/onboarding?change=1">Add your postal code or share your location</Link>.
+              Closest to where you are first.{" "}
+              <button type="button" className="linklike" onClick={() => setUserCoords(null)}>
+                Change location
+              </button>
             </p>
+          )}
+          {sort === "near" && !hasDistance ? (
+            <NearMePrompt />
           ) : byCategory ? (
             sections.map(({ category, top }) => (
               <section key={category.name} className="catsection" aria-label={category.name}>
