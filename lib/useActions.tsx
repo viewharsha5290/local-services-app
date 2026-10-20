@@ -10,7 +10,7 @@ import { ClaimSheet } from "@/components/sheets/ClaimSheet";
 import { PendingAction } from "./types";
 
 export function useActionResolver() {
-  const { toggleSaved, getProvider } = useApp();
+  const { auth, toggleSaved, getProvider } = useApp();
   const { open } = useSheet();
 
   return useCallback(
@@ -22,7 +22,9 @@ export function useActionResolver() {
       }
       if (action.type === "review") {
         const provider = getProvider(action.providerId);
-        if (provider) open(<WriteReviewSheet provider={provider} />);
+        // One review per neighbour: someone who already wrote one gets it back to edit.
+        const mine = auth.id ? provider?.reviews.find((r) => r.authorId === auth.id) : undefined;
+        if (provider) open(<WriteReviewSheet provider={provider} review={mine} />);
         return;
       }
       if (action.type === "recommend") {
@@ -35,7 +37,7 @@ export function useActionResolver() {
         if (provider && !provider.ownerId) open(<ClaimSheet provider={provider} />);
       }
     },
-    [toggleSaved, getProvider, open]
+    [auth.id, toggleSaved, getProvider, open]
   );
 }
 

@@ -350,7 +350,7 @@ export default function ProviderDetailPage() {
                 ))}
               </div>
               <button type="button" className="btn btn-secondary btn-block" style={{ marginTop: 12 }} onClick={writeReview}>
-                Write a review
+                {auth.id && provider.reviews.some((r) => r.authorId === auth.id) ? "Edit your review" : "Write a review"}
               </button>
             </>
           )}

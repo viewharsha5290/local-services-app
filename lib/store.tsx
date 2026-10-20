@@ -122,7 +122,7 @@ interface AppContextValue {
   signOut: () => void;
   toggleSaved: (providerId: string) => void;
   isSaved: (providerId: string) => boolean;
-  addReview: (input: ReviewInput) => void;
+  addReview: (input: ReviewInput) => Promise<void>;
   /** Edit or delete one of the signed-in user's own reviews (the database refuses anyone else's). */
   updateReview: (reviewId: string, input: ReviewInput) => Promise<{ error?: string }>;
   deleteReview: (reviewId: string, providerId: string) => Promise<{ error?: string }>;
@@ -900,6 +900,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (input: ReviewInput) => {
       if (auth.status !== "signedIn" || !auth.id) return;
       const authorName = auth.name ?? "Neighbor";
+      // One review per neighbour per listing: a repeat (double tap, or a quick rating after a
+      // written review) is dropped rather than counted twice.
+      const { data: existing } = await supabase.from("reviews").select("id").eq("provider_id", input.providerId).eq("author_id", auth.id).limit(1);
+      if (existing?.length) return;
       const { data } = await supabase
         .from("reviews")
         .insert({ provider_id: input.providerId, author_id: auth.id, author_name: authorName, rating: input.rating, tags: input.tags, text: input.text, anonymous: Boolean(input.anonymous) })

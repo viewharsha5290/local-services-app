@@ -25,12 +25,13 @@ export function WriteReviewSheet({ provider, review }: { provider: Provider; rev
   }
 
   async function submit() {
+    setSaving(true);
     if (!review) {
-      addReview({ providerId: provider.id, rating, tags, text: text.trim(), anonymous });
+      // Wait for the save so a second tap can't post the same review twice.
+      await addReview({ providerId: provider.id, rating, tags, text: text.trim(), anonymous });
       close();
       return;
     }
-    setSaving(true);
     setError(null);
     const result = await updateReview(review.id, { providerId: provider.id, rating, tags, text: text.trim(), anonymous });
     setSaving(false);
@@ -87,7 +88,7 @@ export function WriteReviewSheet({ provider, review }: { provider: Provider; rev
         .
       </p>
       <button type="button" className="btn btn-primary btn-block" onClick={submit} disabled={saving}>
-        {review ? (saving ? "Saving…" : "Save changes") : "Post review"}
+        {review ? (saving ? "Saving…" : "Save changes") : saving ? "Posting…" : "Post review"}
       </button>
     </div>
   );
