@@ -48,6 +48,7 @@ const CATEGORY_QUERIES = {
   "Party Rentals": { text: "party rentals" },
   "Flowers & Pooja Items": { text: "indian pooja store" },
   Classes: { text: "music dance classes for kids" },
+  "Cleaning Services": { text: ["house cleaning service", "commercial cleaning service", "carpet cleaning"] },
 };
 
 const FIELD_MASK = [
